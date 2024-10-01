@@ -1,0 +1,142 @@
+body {
+    font-family: Arial, Helvetica, sans-serif ;
+    margin: 0;
+    padding: 0;
+    background-color: #363636;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center all content horizontally */
+}
+
+header {
+    background-color: #262622;
+    color: white;
+    padding: 20px;
+    text-align: center;
+    width: 97.4%;
+   
+}
+
+h1, h2 {
+    margin: 10px;
+}
+
+#class-schedule {
+    width: 85%; /* Adjust width to make the table smaller */
+    margin: 20px auto; /* Center the class schedule section */
+    background-color:  #262622;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add a shadow for a cleaner look */
+    border-radius: 10px; /* Slightly round the corners */
+    color: white;
+    
+}
+#link1 {
+    text-align: center;
+    color: white;
+    display: flex;
+    position: absolute;
+    left: 5px;
+}
+#link2 {
+    color: white;
+    position: absolute;
+    left: 5px;
+    top: 20px;
+}
+#funi{
+    color: white;
+    position: absolute;
+    left: 5px;
+    top: 40px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+    border-radius: 5px;
+    
+}
+
+table, th, td, tbody {
+    border-radius: 20px;
+    border: 6px solid #262622;
+   
+}
+
+th, td {
+    padding: 12px;
+    text-align: center;
+  
+}
+
+th {
+    background-color:  #4f4f4f;
+    color: white;
+   
+   
+}
+tbody{
+    margin-bottom: 500px;
+    background-color:  #363636;
+    color: rgb(255, 255, 255);
+    
+}
+
+#calendar {
+    margin: 20px;
+    color: white;  
+}
+
+iframe {
+    margin: 20px auto;
+    display: block;
+    border-radius: 8px;
+}
+
+#clock {
+    font-size: 1.5rem;
+    margin-top: 10px;
+    color: white;
+}
+.current-class {
+    background-color: #a59928; /* Yellow background for the current class */
+    font-weight: bold;
+}
+a{
+color:white;
+left: 15px;
+top: 10px;
+position: absolute;
+}
+::-webkit-scrollbar{
+width: 2px;
+}
+::-webkit-scrollbar-track{
+background: black;
+
+}
+::-webkit-scrollbar-thumb{
+background: white;
+border-radius: 10px;
+
+}
+::-webkit-scrollbar-button{
+    width: 2px;
+    }
+    ::-webkit-scrollbar-track{
+    background: black;
+    
+    }
+    ::-webkit-scrollbar-thumb{
+    background: white;
+    border-radius: 10px;
+    
+    }
+    #compliment{
+        align-items: center;
+        color: white;
+        margin-top: 10px;
+    
+    }
