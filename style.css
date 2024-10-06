@@ -44,6 +44,12 @@ h1, h2 {
     left: 5px;
     top: 20px;
 }
+#link3 {
+    color: white;
+    position: absolute;
+    left: 5px;
+    top: 60px;
+}
 #funi{
     color: white;
     position: absolute;
