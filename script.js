@@ -9,9 +9,9 @@ const schedules = {
         { name: "Lunch", startTime: "12:19PM", endTime: "01:12PM" },
         { name: "Chemistry Honors", startTime: "01:15PM", endTime: "02:08PM" },
         { name: "AP Computer Science Principles", startTime: "02:11PM", endTime: "03:04PM" },
-        { name: "Freetime", startTime: "03:04PM", endTime: "05:00PM" },
-        { name: "Homework", startTime: "05:00PM", endTime: "10:00PM" },
-        { name: "sleep", startTime: "10:00PM", endTime: "5:30AM" },
+        { name: "Homework", startTime: "03:04PM", endTime: "08:00PM" },
+        { name: "Freetime", startTime: "08:00PM", endTime: "10:00PM" },
+        { name: "sleep", startTime: "10:00PM", endTime: "05:30AM" },
     ],
     "Tuesday": [
         { name: "Seminar Sophomore", startTime: "08:00AM", endTime: "08:32AM" },
@@ -22,9 +22,10 @@ const schedules = {
         { name: "Lunch", startTime: "12:19PM", endTime: "01:12PM" },
         { name: "Chemistry Honors", startTime: "01:15PM", endTime: "02:08PM" },
         { name: "AP Computer Science Principles", startTime: "02:11PM", endTime: "03:04PM" },
-        { name: "Robotics Club", startTime: "03:04PM", endTime: "04:00PM" },
-        { name: "Homework", startTime: "04:00PM", endTime: "10:00PM" },
-        { name: "sleep", startTime: "10:00PM", endTime: "5:30AM" },
+        { name: "Chess Club", startTime: "03:04PM", endTime: "04:00PM" },
+        { name: "Homework", startTime: "04:00PM", endTime: "08:00PM" },
+        { name: "Freetime", startTime: "08:00PM", endTime: "10:00PM" },
+        { name: "sleep", startTime: "10:00PM", endTime: "05:30AM" },
         
     ],
     "Wednesday": [
@@ -37,7 +38,8 @@ const schedules = {
         { name: "Chemistry Honors", startTime: "01:15PM", endTime: "02:08PM" },
         { name: "AP Computer Science Principles", startTime: "02:11PM", endTime: "03:04PM" },
         { name: "Chess Club", startTime: "03:04PM", endTime: "04:00PM" },
-        { name: "Homework", startTime: "04:00PM", endTime: "10:00PM" },
+        { name: "Homework", startTime: "04:00PM", endTime: "08:00PM" },
+        { name: "Freetime", startTime: "08:00PM", endTime: "10:00PM" },
         { name: "sleep", startTime: "10:00PM", endTime: "5:30AM" },
        
     ],
@@ -52,7 +54,8 @@ const schedules = {
         { name: "Chemistry Honors", startTime: "01:23PM", endTime: "02:12PM" },
         { name: "AP Computer Science Principles", startTime: "02:15PM", endTime: "03:04PM" },
         { name: "Science Olympiad", startTime: "03:04PM", endTime: "05:00PM" },
-        { name: "Homework", startTime: "05:00PM", endTime: "10:00PM" },
+        { name: "Homework", startTime: "05:00PM", endTime: "08:00PM" },
+        { name: "Freetime", startTime: "08:00PM", endTime: "10:00PM" },
         { name: "sleep", startTime: "10:00PM", endTime: "5:30AM" },
     ],
     "Friday": [
@@ -64,25 +67,28 @@ const schedules = {
         { name: "Lunch", startTime: "12:31PM", endTime: "01:20PM" },
         { name: "Chemistry Honors", startTime: "01:23PM", endTime: "02:12PM" },
         { name: "AP Computer Science Principles", startTime: "02:15PM", endTime: "03:04PM" },
-        { name: "Rubik's Cube Club", startTime: "03:04PM", endTime: "05:00PM" },
-        { name: "Homework", startTime: "05:00PM", endTime: "10:00PM" },
+        { name: "Game Development Club", startTime: "03:04PM", endTime: "05:00PM" },
+        { name: "Homework", startTime: "05:00PM", endTime: "08:00PM" },
+        { name: "Freetime", startTime: "08:00PM", endTime: "10:00PM" },
         { name: "sleep", startTime: "10:00PM", endTime: "5:30AM" },
 
     ],
     "Saturday": [
         { name: "Freetime", startTime: "08:00AM", endTime: "1:00PM" },
-        { name: "Work/Study", startTime: "1:00PM", endTime: "3:00PM" },
-        { name: "SAT study sessions/Test", startTime: "3:00PM", endTime: "6:00PM" },
+        { name: "Chess Training", startTime: "1:00PM", endTime: "3:00PM" },
+        { name: "Cubing Training", startTime: "3:00PM", endTime: "6:00PM" },
         { name: "Dinner", startTime: "6:00PM", endTime: "8:00PM" },
-        { name: "Do Anything", startTime: "8:00PM", endTime: "10:00PM" },
+        { name: "Coding/Guitar", startTime: "8:00PM", endTime: "10:00PM" },
         { name: "sleep", startTime: "10:00PM", endTime: "5:30AM" },
     ],
-    "Sunday": [
+    "Sunday": [ 
         { name: "Freetime", startTime: "08:00AM", endTime: "1:00PM" },
-        { name: "Harvard CS50", startTime: "1:00PM", endTime: "5:00PM" },
-        { name: "Discrete Math Course", startTime: "4:00PM", endTime: "8:00PM" },
-        { name: "Do Anything", startTime: "8:00PM", endTime: "10:00PM" },
+        { name: "Chess Training", startTime: "1:00PM", endTime: "3:00PM" },
+        { name: "Cubing Training", startTime: "3:00PM", endTime: "6:00PM" },
+        { name: "Dinner", startTime: "6:00PM", endTime: "8:00PM" },
+        { name: "Coding/Guitar", startTime: "8:00PM", endTime: "10:00PM" },
         { name: "sleep", startTime: "10:00PM", endTime: "5:30AM" },
+      
     ]   
 };
 
