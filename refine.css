@@ -86,3 +86,35 @@ select,.field input,.field textarea,.field select,.mini-input,input[type=number]
 .icon-btn[data-action=show-shortcuts],.quick-actions .qa:nth-child(2){display:none}
 @media(min-width:1181px){.quick-actions{grid-template-columns:repeat(3,1fr)}}
 .qa.primary{background:var(--accent);color:var(--accent-ink)}
+
+/* ===== Readability: no text below 13px, no shouty uppercase ===== */
+body{font-size:15px;line-height:1.55}
+.small,small,.muted.small,.eyebrow,.side-label,.stat-label,.pill,.course-meta,.progress-row,.chart-axis,.legend,.helper-text,.field small,.field label,.tip p,.local-note small,.ch-no,.ch-state,.course-art .tag,.mn,.cm,.due-pill,.nav-count,.table th,.table td,.search-trigger,.toast,.modal-text,.hint,.form-error,.save-state,.line-btn,kbd{font-size:13px}
+.eyebrow,.side-label,.stat-label,.table th{text-transform:none;letter-spacing:0;font-weight:600}
+.primary-btn,.secondary-btn,.danger-btn,.text-btn,.menu-item,.chapter-btn,.feedback{font-size:14px}
+.primary-btn.big{padding:12px 26px;font-size:15px}
+.nav-item{font-size:15px;gap:14px}
+.stat-card strong{font-size:30px}.stat-card small{font-size:13px}
+.course-info h3{font-size:17px}.course-info p,.subheading{font-size:15px}
+.board-controls .icon-btn{min-width:42px;height:40px;font-size:16px}
+.icon-btn[data-action=show-shortcuts]{display:inline-grid}
+/* ===== Motion ===== */
+@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.view.active{animation:viewIn .24s ease-out}
+.primary-btn,.secondary-btn,.nav-item,.course-card,.chip,.icon-btn{transition:background .15s,transform .12s,filter .15s,color .15s,box-shadow .2s}
+.primary-btn:active,.secondary-btn:active,.icon-btn:active{transform:scale(.96)}
+.course-card:hover{box-shadow:0 8px 24px #0002}
+@keyframes goodPulse{0%{box-shadow:0 0 0 0 #34c75988}100%{box-shadow:0 0 0 14px #34c75900}}
+@keyframes shake{20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+@keyframes badgeIn{0%{opacity:0;transform:scale(.6)}30%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.15)}}
+.board.fx-good,.board.fx-done{animation:goodPulse .5s ease-out}
+.board.fx-bad{animation:shake .32s ease}
+.done-badge{position:absolute;inset:0;margin:auto;width:96px;height:96px;border-radius:50%;display:grid;place-items:center;font-size:54px;color:#fff;background:#34c759e6;pointer-events:none;z-index:30;animation:badgeIn 1s ease-out forwards}
+.feedback{transition:background .2s,color .2s}
+/* ===== Collapsible sidebar ===== */
+.sb-collapsed .sidebar{width:76px;padding-left:10px;padding-right:10px}
+.sb-collapsed .main-area{margin-left:76px}
+.sb-collapsed .sidebar em,.sb-collapsed .brand span:not(.brand-mark),.sb-collapsed .local-note,.sb-collapsed .side-label,.sb-collapsed .nav-count{display:none}
+.sb-collapsed .nav-item{justify-content:center}
+@media(max-width:900px){.sb-collapsed .sidebar{width:auto}.sb-collapsed .main-area{margin-left:0}.sb-collapsed .sidebar em{display:block}.nav-item{font-size:12px}.board-host{max-width:100%}}
+.quick-actions{display:none}

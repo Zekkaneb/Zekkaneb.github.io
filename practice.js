@@ -124,7 +124,7 @@
 
   function renderRunShell() {
     $('#view-practice').innerHTML =
-      '<div class="practice-run"><div class="practice-top"><div><p class="eyebrow" id="pr-eyebrow"></p><h2 id="pr-title"></h2></div><div class="btn-row"><button class="secondary-btn" data-action="practice-flip">Flip</button><button class="secondary-btn" data-action="board-theme" title="Change board theme">◧</button><button class="secondary-btn" data-action="practice-end">End session</button></div></div>' +
+      '<div class="practice-run"><div class="practice-top"><div><p class="eyebrow" id="pr-eyebrow"></p><h2 id="pr-title"></h2></div><div class="btn-row"><button class="secondary-btn" data-action="practice-flip">Flip</button><button class="secondary-btn" data-action="board-theme" title="Change board theme">◧</button><button class="secondary-btn" data-action="practice-end">Exit</button></div></div>' +
       '<div class="progress-track big"><div class="progress-fill" id="pr-bar"></div></div>' +
       '<div class="practice-layout"><div class="board-host"><div id="pr-board"></div></div>' +
       '<aside class="panel practice-side"><div id="pr-turn" class="pill"></div><div id="pr-feedback" class="feedback">Your move.</div><div id="pr-comment" class="comment-box hidden"></div>' +
@@ -144,7 +144,7 @@
     tick();
     P.board.set({ fen: P.L.fen, last: null, check: null, marks: {}, arrows: [], orientation: P.flip ? (ch.orientation === 'white' ? 'black' : 'white') : ch.orientation });
     paintRun();
-    setFeedback(P.L.learn ? 'New line - watch the answers highlighted, then play them.' : 'Play the next move of your repertoire.', 'info');
+    setFeedback(P.L.learn ? 'New line - watch the answers highlighted, then play them.' : 'Find the correct move.', 'info');
     advance();
   }
 
@@ -173,6 +173,7 @@
     if (node && node.comment && OL.settings.get('showComments') && !(P.test && !(P.L && P.L.done))) { c.textContent = node.comment; c.classList.remove('hidden'); } else c.classList.add('hidden');
   }
 
+  function flash(cls) { const b = P.board && P.board.root; if (!b) return; b.classList.remove(cls); void b.offsetWidth; b.classList.add(cls); setTimeout(() => b.classList.remove(cls), 600); }
   function arrowFor(n, kind) { return n && n.uci ? [{ from: n.uci.slice(0, 2), to: n.uci.slice(2, 4), kind: kind || 'main' }] : []; }
   function hold(node, ms) {
     const L = P.L; if (!L) return;
@@ -228,7 +229,7 @@
     }
     L.attempts++; P.S.attempted++;
     if (match || alt) {
-      L.correct++; P.S.correct++;
+      L.correct++; P.S.correct++; flash('fx-good');
       const node = match || alt;
       if (alt) retarget(alt);
       L.waiting = false; P.board.setInteractive(false);
@@ -238,7 +239,7 @@
       L.step++;
       hold(node, 220);
     } else {
-      L.mistakes++; L.incorrect++; P.S.incorrect++;
+      L.mistakes++; L.incorrect++; P.S.incorrect++; flash('fx-bad');
       P.board.set(P.test ? { fen: L.fen, marks: {}, arrows: [] } : { fen: L.fen, marks: markFor(expected), arrows: arrowFor(expected) });
       const nm = OL.courses.pathTo(L.item.ch, expected.id).length;
       setFeedback(P.test ? '✗ ' + r.san + ' is not the repertoire move. Try again.' : '✗ ' + r.san + ' is not in your repertoire here. Expected: ' + expected.san + '. Try again.', 'bad');
@@ -273,6 +274,7 @@
       P.S.lines.push(rec);
     } else msg = 'Replay complete (not graded).';
     setFeedback(msg, L.mistakes || L.revealed ? 'info' : 'good');
+    flash('fx-done'); { const h = $('.board-host'); if (h) { h.style.position = 'relative'; const d = document.createElement('div'); d.className = 'done-badge'; d.textContent = '✓'; h.appendChild(d); setTimeout(() => d.remove(), 1000); } }
     paintRun();
     OL.utils.bus.emit('progress', {});
     if (OL.settings.get('autoAdvance') && !L.mistakes && !L.revealed && !L.replay && !OL.settings.get('waitBetweenLines')) later(() => nextLine(), 1100);

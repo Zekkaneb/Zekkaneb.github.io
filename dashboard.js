@@ -12,7 +12,7 @@
     const fallback = recent.length ? recent : OL.courses.sorted().slice(0, 3);
     const acts = OL.courses.activity.items.slice(0, 8);
     root.innerHTML =
-      '<div class="welcome-row"><div><p class="eyebrow">YOUR CHESS WORKSPACE</p><h1>Build your opening <em>repertoire.</em></h1><p class="subheading">' + (o.due ? plural(o.due, 'variation') + ' due for review today.' : o.courses ? 'You are all caught up on reviews.' : 'Import a Lichess study to get started.') + '</p></div></div>' +
+      '<div class="welcome-row"><div><p class="eyebrow">YOUR CHESS WORKSPACE</p><h1>Build your opening <em>repertoire.</em></h1><p class="subheading">' + (o.due ? plural(o.due, 'variation') + ' due for review today.' : o.courses ? 'You are all caught up on reviews.' : 'Import a Lichess study to get started.') + '</p></div><button class="primary-btn big" data-nav="#/practice">' + (o.due ? 'Practice ' + o.due + ' due' : 'Start practice') + '</button></div>' +
       '<div class="quick-actions">' +
       '<button class="qa" data-nav="#/import"><span>↓</span><b>Import a study</b><small>Lichess or PGN</small></button>' +
       '<button class="qa" data-nav="#/import" data-tab="upload" data-action="qa-upload"><span>↑</span><b>Upload a PGN</b><small>File or paste</small></button>' +

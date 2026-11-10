@@ -208,10 +208,11 @@
   }
 
   /* ---------- navigation ---------- */
+  const saveLast = debounce(() => { if (S.course) OL.store.put('courses', S.course).catch(() => {}); }, 800);
   function goto(id) {
     const idx = OL.courses.index(S.ch);
     if (!idx.has(id)) { console.warn('goto: unknown node', id); return; }
-    S.nodeId = id;
+    S.nodeId = id; S.course.lastPos = { ch: S.ch.id, node: id }; saveLast();
     renderBoard(); renderRight();
     OL.utils.$$('#study-left .line-btn').length && 0;
   }
@@ -387,7 +388,9 @@
     if (!S.layoutInit) { S.layoutInit = true; if (window.innerWidth < 900) S.left = false; } // phones: board first, course panel on demand
     if (!c.chapters.length) { c.chapters.push(OL.courses.newChapter({ name: 'Chapter 1' })); }
     try {
-      openChapter(params.ch || (c.chapters.find((x) => !x.completed) || c.chapters[0]).id);
+      const lp = !params.ch && c.lastPos && c.chapters.some((x) => x.id === c.lastPos.ch) ? c.lastPos : null;
+      openChapter(params.ch || (lp ? lp.ch : (c.chapters.find((x) => !x.completed) || c.chapters[0]).id));
+      if (!params.node && lp && OL.courses.index(S.ch).has(lp.node)) S.nodeId = lp.node;
       if (params.node && OL.courses.index(S.ch).has(params.node)) S.nodeId = params.node;
       renderShell(); renderAll();
       c.lastStudied = Date.now(); OL.store.put('courses', c).catch((e) => console.warn('lastStudied not saved', e));

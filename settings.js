@@ -50,7 +50,7 @@
   }
   OL.settings = {
     DEFAULTS,
-    init() { load(); apply(); if (window.matchMedia) window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (cur.theme === 'system') apply(); }); },
+    init() { load(); apply(); try { document.body.classList.toggle('sb-collapsed', !!localStorage.getItem('ol-sb')); } catch (e) { /* ignore */ } if (window.matchMedia) window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if (cur.theme === 'system') apply(); }); },
     get: (k) => cur[k],
     all: () => Object.assign({}, cur),
     set(patch) { Object.assign(cur, patch); persist(); apply(); OL.utils.bus.emit('settings', cur); },
@@ -59,5 +59,6 @@
     cycleBoard() { const l = ['green', 'brown', 'blue', 'slate', 'neutral', 'marble', 'midnight']; OL.settings.set({ boardTheme: l[(l.indexOf(cur.boardTheme) + 1) % l.length] }); },
     toggleTheme() { OL.settings.set({ theme: isLight() ? 'dark' : 'light' }); },
   };
+  OL.actions.register({ 'toggle-sidebar': () => { const on = !document.body.classList.contains('sb-collapsed'); document.body.classList.toggle('sb-collapsed', on); try { localStorage.setItem('ol-sb', on ? '1' : ''); } catch (e) { /* ignore */ } } });
   OL.actions.register({ 'board-theme': () => OL.settings.cycleBoard() });
 })();
