@@ -228,6 +228,7 @@
       bus.emit('courses', {});
     },
     categories() { return Array.from(new Set(courses.list.map((c) => c.category).filter(Boolean))).sort(); },
+    applySide(course) { if (course.side === 'white' || course.side === 'black') course.chapters.forEach((ch) => { if (!ch.sideLocked) ch.orientation = course.side; }); },
     exportPgn(course) { OL.utils.download(course.title.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') + '.pgn', OL.pgn.courseToPgn(course), 'application/x-chess-pgn'); },
   };
 
@@ -246,7 +247,7 @@
       '<span class="chess-symbol">♞</span>' + (c.category ? '<span class="tag cat">' + esc(c.category) + '</span>' : '') + '</div>' +
       '<div class="course-info"><h3>' + esc(c.title) + '</h3>' +
       '<p class="clamp">' + (c.description ? esc(c.description) : '<span class="faint">No description</span>') + '</p>' +
-      '<div class="course-meta"><span>' + plural(s.chapters, 'chapter') + ' · ' + plural(s.variations, 'variation') + '</span><span>' + (s.due ? '<b class="due-pill">' + s.due + ' due</b>' : '') + '</span></div>' +
+      '<div class="course-meta"><span>' + (c.side && c.side !== 'both' ? c.side[0].toUpperCase() + c.side.slice(1) + ' · ' : '') + plural(s.chapters, 'chapter') + ' · ' + plural(s.variations, 'variation') + '</span><span>' + (s.due ? '<b class="due-pill">' + s.due + ' due</b>' : '') + '</span></div>' +
       '<div class="progress-row"><span>Chapters studied</span><span>' + s.completed + '/' + s.chapters + ' · ' + pctDone + '%</span></div><div class="progress-track"><div class="progress-fill" style="width:' + pctDone + '%"></div></div>' +
       '<div class="progress-row"><span>Memorised</span><span>' + memo + '%</span></div><div class="progress-track"><div class="progress-fill gold" style="width:' + memo + '%"></div></div>' +
       '<div class="course-foot"><span class="faint">Last studied: ' + relTime(c.lastStudied) + '</span>' +
@@ -286,6 +287,7 @@
         { name: 'opening', label: 'Opening (optional)', value: c ? c.opening : '', placeholder: 'e.g. Caro-Kann Defense', help: 'Only shown if you enter it - nothing is guessed.' },
         { name: 'eco', label: 'ECO code (optional)', value: c ? c.eco : '', placeholder: 'e.g. B12' },
         { name: 'category', label: 'Category / folder', value: c ? c.category : '', placeholder: 'e.g. White repertoire' },
+        { name: 'side', label: 'Repertoire side', type: 'select', options: [{ value: 'both', label: 'Both (set per chapter)' }, { value: 'white', label: 'White' }, { value: 'black', label: 'Black' }], value: c ? c.side || 'both' : 'both' },
         { name: 'color', label: 'Cover colour', type: 'swatch', options: COLORS, value: c ? c.color : COLORS[0] },
         { name: 'cover', label: 'Cover image (optional)', type: 'image', value: c ? c.cover : '' },
       ],
@@ -299,7 +301,7 @@
     'course-create': async () => {
       const v = await detailsForm(null);
       if (!v) return;
-      const c = await courses.create(Object.assign({}, v, { chapters: [courses.newChapter({ name: 'Chapter 1' })] }));
+      const c = await courses.create(Object.assign({}, v, { chapters: [courses.newChapter({ name: 'Chapter 1', orientation: v.side === 'black' ? 'black' : 'white' })] }));
       OL.ui.toast('Course created');
       OL.nav.go('#/study/' + c.id + '?edit=1');
     },
@@ -312,7 +314,7 @@
         { id: 'del', label: 'Delete course…', danger: true }] });
       if (pick === 'edit') {
         const v = await detailsForm(c);
-        if (v) { Object.assign(c, v); await courses.save(c); OL.ui.toast('Course updated'); }
+        if (v) { Object.assign(c, v); courses.applySide(c); await courses.save(c); OL.ui.toast('Course updated'); }
       } else if (pick === 'dup') { await courses.duplicate(c.id); OL.ui.toast('Course duplicated'); }
       else if (pick === 'pgn') courses.exportPgn(c);
       else if (pick === 'up' || pick === 'down') { view.sort = 'manual'; await courses.move(c.id, pick === 'up' ? -1 : 1); }

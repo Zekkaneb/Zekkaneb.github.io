@@ -5,7 +5,7 @@
   const DEFAULTS = {
     theme: 'dark',            // dark | light | system
     boardTheme: 'green',      // green | brown | blue | slate
-    pieceStyle: 'filled',     // filled | outline
+    pieceStyle: 'classic',    // classic | minimal | detailed
     coords: true,
     animations: true,
     defaultSide: 'both',      // both | white | black

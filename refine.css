@@ -1,0 +1,12 @@
+/* Calmer UI + board themes. Load after board.css. */
+.view{padding-top:28px}
+.welcome-row h1,.page-heading h1{font-size:clamp(22px,2.4vw,30px);letter-spacing:-1px}
+.panel,.stat-card,.course-card,.catalog-item{box-shadow:none;border-radius:10px}
+.course-art{height:46px}.course-art:before,.course-art .chess-symbol{display:none}
+.course-info .clamp,.course-info .progress-track.gold,.progress-track:not(.gold)+.progress-row{display:none}
+@media(min-width:1181px){.stats-grid.six{grid-template-columns:repeat(3,1fr)}.stats-grid.six .stat-card:nth-child(2),.stats-grid.six .stat-card:nth-child(3),.stats-grid.six .stat-card:nth-child(5){display:none}}
+.board{border-width:3px}
+.sq.last:before{background:#e9d96a55}
+.sq.selected .pc{transform:scale(1.06)}
+.sq.target:after{background:#1e3a2466}
+body[data-board=neutral] .board{--sq-light:#ebebe8;--sq-dark:#a3a6a2}

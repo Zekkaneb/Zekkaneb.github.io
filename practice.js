@@ -116,7 +116,7 @@
     clearTimers();
     P.cfg = cfg; P.queue = r.queue; P.qi = 0;
     P.S = { id: uid('sess'), started: Date.now(), active: 0, last: Date.now(), attempted: 0, correct: 0, incorrect: 0, lines: [], courseIds: Array.from(new Set(r.queue.map((i) => i.course.id))) };
-    P.phase = 'run';
+    P.phase = 'run'; P.flip = false;
     renderRunShell();
     startLine();
   }
@@ -124,7 +124,7 @@
 
   function renderRunShell() {
     $('#view-practice').innerHTML =
-      '<div class="practice-run"><div class="practice-top"><div><p class="eyebrow" id="pr-eyebrow"></p><h2 id="pr-title"></h2></div><div class="btn-row"><button class="secondary-btn" data-action="practice-end">End session</button></div></div>' +
+      '<div class="practice-run"><div class="practice-top"><div><p class="eyebrow" id="pr-eyebrow"></p><h2 id="pr-title"></h2></div><div class="btn-row"><button class="secondary-btn" data-action="practice-flip">Flip</button><button class="secondary-btn" data-action="practice-end">End session</button></div></div>' +
       '<div class="progress-track big"><div class="progress-fill" id="pr-bar"></div></div>' +
       '<div class="practice-layout"><div class="board-host"><div id="pr-board"></div></div>' +
       '<aside class="panel practice-side"><div id="pr-turn" class="pill"></div><div id="pr-feedback" class="feedback">Your move.</div><div id="pr-comment" class="comment-box hidden"></div>' +
@@ -142,7 +142,7 @@
       user: ch.orientation === 'black' ? 'b' : 'w', learn: !item.card || !item.card.reviews, waiting: false, done: false, replay: !!replay, t0: Date.now(), switched: false,
     };
     tick();
-    P.board.set({ fen: P.L.fen, last: null, check: null, marks: {}, orientation: ch.orientation });
+    P.board.set({ fen: P.L.fen, last: null, check: null, marks: {}, orientation: P.flip ? (ch.orientation === 'white' ? 'black' : 'white') : ch.orientation });
     paintRun();
     setFeedback(P.L.learn ? 'New line - watch the answers highlighted, then play them.' : 'Play the next move of your repertoire.', 'info');
     advance();
@@ -178,7 +178,7 @@
     const node = L.path[L.step];
     const mover = OL.courses.sideAtPly(L.item.ch, L.step + 1);
     if (mover === L.user) {
-      L.waiting = true;
+      L.waiting = true; L.hintLevel = 0;
       P.board.set({ marks: L.learn ? markFor(node) : {} });
       P.board.setInteractive(true);
       paintRun();
@@ -311,7 +311,8 @@
   OL.actions.register({
     'practice-expand': (el) => { P.prefill = { course: el.dataset.id }; renderSetup(); },
     'practice-start': () => { const cfg = readCfg(); if (!cfg.courseIds.length) { OL.ui.toast('Select at least one course.', 'warn'); return; } startSession(cfg); },
-    'practice-hint': () => { const L = P.L; if (!L || !L.waiting) return; L.hint = true; const n = L.path[L.step]; P.board.set({ marks: { [n.uci.slice(0, 2)]: 'hint' } }); setFeedback('Hint: move the highlighted piece.', 'info'); },
+    'practice-hint': () => { const L = P.L; if (!L || !L.waiting) return; L.hint = true; L.hintLevel = (L.hintLevel || 0) + 1; const n = L.path[L.step]; if (L.hintLevel === 1) { P.board.set({ marks: { [n.uci.slice(0, 2)]: 'hint' } }); setFeedback('Hint: move the highlighted piece.', 'info'); } else if (L.hintLevel === 2) { P.board.set({ marks: markFor(n) }); setFeedback('Hint: it goes to the highlighted square.', 'info'); } else OL.actions.run('practice-reveal'); },
+    'practice-flip': () => { if (!P.board || !P.L) return; P.flip = !P.flip; const o = P.L.item.ch.orientation; P.board.set({ orientation: P.flip ? (o === 'white' ? 'black' : 'white') : o }); },
     'practice-reveal': () => { const L = P.L; if (!L || !L.waiting) return; L.revealed = true; const n = L.path[L.step]; L.attempts++; P.S.attempted++; L.waiting = false; P.board.setInteractive(false); applyNode(n); setFeedback('Answer: ' + n.san + ' (this line will come back sooner).', 'bad'); showComment(n); L.step++; later(advance, 500); },
     'practice-continue': () => { const L = P.L; if (!L) return; playOpponent(L.path[L.step]); },
     'practice-next': () => nextLine(),

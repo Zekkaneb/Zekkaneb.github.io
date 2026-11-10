@@ -7,7 +7,7 @@
   const FILLED = { k: '♚', q: '♛', r: '♜', b: '♝', n: '♞', p: '♟' };
   const OUTLINE = { k: '♔', q: '♕', r: '♖', b: '♗', n: '♘', p: '♙' };
   const TEXT = '︎'; // keep pawns as text glyphs, not emoji
-  const glyph = (p, style) => (style === 'outline' && p.c === 'w' ? OUTLINE[p.t] : FILLED[p.t]) + TEXT;
+  const glyph = (p, style) => OL.pieces.svg(p, style);
 
   class Board {
     /* opts: interactive, orientation, getMoves(from)->[{to,promotion,capture}], onMove(from,to,promotion) */

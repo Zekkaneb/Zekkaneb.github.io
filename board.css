@@ -26,3 +26,6 @@ body[data-pieces=outline] .pc.w{color:#fff;text-shadow:0 0 2px #000,0 0 1px #000
 .promo{display:flex;gap:6px;background:var(--panel);padding:10px;border-radius:12px;border:1px solid var(--line)}
 .promo button{width:64px;height:64px;border-radius:10px;border:1px solid var(--line);background:var(--sq-light);display:grid;place-items:center}.promo button:hover{border-color:var(--accent)}
 .promo .pc{font-size:46px;position:static}
+.pc{font-size:0;width:86%;height:86%;display:block}
+.pc svg{width:100%;height:100%;display:block;filter:drop-shadow(0 1px 1px #0004)}
+.promo .pc{width:46px;height:46px}

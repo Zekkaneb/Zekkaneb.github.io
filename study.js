@@ -252,7 +252,7 @@
       title: ch ? 'Edit chapter' : 'New chapter', submitLabel: ch ? 'Save' : 'Add chapter',
       fields: [
         { name: 'name', label: 'Chapter name', value: ch ? ch.name : '', required: true },
-        { name: 'orientation', label: 'You play as (board orientation & training side)', type: 'select', options: [{ value: 'white', label: 'White' }, { value: 'black', label: 'Black' }], value: ch ? ch.orientation : 'white' },
+        { name: 'orientation', label: 'You play as (board orientation & training side)', type: 'select', options: [{ value: 'white', label: 'White' }, { value: 'black', label: 'Black' }], value: ch ? ch.orientation : (S.course.side === 'black' ? 'black' : 'white') },
         { name: 'description', label: 'Chapter description', type: 'textarea', value: ch ? ch.description : '' },
       ],
     });
@@ -316,7 +316,7 @@
       if (!pick) return;
       if (pick === 'edit') {
         const v = await chapterForm(ch); if (!v) return;
-        if (isCur) pushUndo(); Object.assign(ch, v); ch.edited = true; markDirty(); renderAll();
+        if (isCur) pushUndo(); if (v.orientation !== ch.orientation && S.course.side && S.course.side !== 'both') ch.sideLocked = true; Object.assign(ch, v); if (isCur) S.board = null; ch.edited = true; markDirty(); renderAll();
       } else if (pick === 'fen') { if (!S.edit) { S.edit = true; } await setStartFen(); renderShellKeep(); }
       else if (pick === 'up' || pick === 'down') {
         const j = i + (pick === 'up' ? -1 : 1); if (j < 0 || j >= S.course.chapters.length) return;

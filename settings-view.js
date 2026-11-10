@@ -15,8 +15,8 @@
     root.innerHTML = '<div class="page-heading"><div><p class="eyebrow">PREFERENCES</p><h1>Settings</h1></div></div>' +
       '<div class="panel"><h3>Appearance</h3>' +
       row('Theme', 'Remembered on this device.', sel('theme', [['dark', 'Dark'], ['light', 'Light'], ['system', 'Match system']], s.theme)) +
-      row('Board theme', '', sel('boardTheme', [['green', 'Green'], ['brown', 'Wood'], ['blue', 'Blue'], ['slate', 'Slate']], s.boardTheme)) +
-      row('Piece style', 'Text-glyph pieces: filled or outline.', sel('pieceStyle', [['filled', 'Filled'], ['outline', 'Outline']], s.pieceStyle)) +
+      row('Board theme', '', sel('boardTheme', [['green', 'Classic green'], ['brown', 'Walnut'], ['blue', 'Tournament blue'], ['slate', 'Slate'], ['neutral', 'Neutral']], s.boardTheme)) +
+      row('Piece style', 'SVG piece set.', sel('pieceStyle', [['classic', 'Classic Staunton'], ['minimal', 'Modern minimal'], ['detailed', 'Detailed traditional']], s.pieceStyle)) +
       row('Board coordinates', '', chk('coords', s.coords, 'Show a–h and 1–8')) +
       row('Animations', 'Turn off for instant transitions.', chk('animations', s.animations, 'Enable animations')) +
       '<div class="board-preview"><div id="set-board"></div></div></div>' +
