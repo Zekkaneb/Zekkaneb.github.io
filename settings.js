@@ -4,7 +4,7 @@
   const KEY = 'opening-lab-settings';
   const DEFAULTS = {
     theme: 'dark',            // dark | light | system
-    palette: 'forest',        // forest | ocean | plum | graphite
+    palette: 'apple',         // apple | forest | ocean | plum | graphite
     boardTheme: 'green',      // green | brown | blue | slate
     pieceStyle: 'classic',    // classic | minimal | detailed
     coords: true,

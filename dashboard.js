@@ -14,7 +14,7 @@
     root.innerHTML =
       '<div class="welcome-row"><div><p class="eyebrow">YOUR CHESS WORKSPACE</p><h1>Build your opening <em>repertoire.</em></h1><p class="subheading">' + (o.due ? plural(o.due, 'variation') + ' due for review today.' : o.courses ? 'You are all caught up on reviews.' : 'Import a Lichess study to get started.') + '</p></div></div>' +
       '<div class="quick-actions">' +
-      '<button class="qa" data-nav="#/import"><span>↓</span><b>Import Lichess study</b><small>From URL or PGN</small></button>' +
+      '<button class="qa" data-nav="#/import"><span>↓</span><b>Import a study</b><small>Lichess or PGN</small></button>' +
       '<button class="qa" data-nav="#/import" data-tab="upload" data-action="qa-upload"><span>↑</span><b>Upload a PGN</b><small>File or paste</small></button>' +
       '<button class="qa" data-action="course-create"><span>＋</span><b>New course</b><small>Start from scratch</small></button>' +
       '<button class="qa primary" data-nav="#/practice"><span>◷</span><b>Start practice</b><small>' + (o.due ? o.due + ' due' : 'Choose what to drill') + '</small></button></div>' +

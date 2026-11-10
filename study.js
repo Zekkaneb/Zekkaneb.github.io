@@ -89,8 +89,8 @@
       '<div class="study-title"><strong>' + esc(S.course.title) + '</strong><span class="muted" id="chapter-title"></span></div>' +
       '<span id="save-state" class="save-state saved">✓ Saved</span>' +
       '<div class="btn-row">' +
-      '<button class="secondary-btn" data-action="study-toggle-left" title="Toggle course panel">☰ Course</button>' +
-      '<button class="secondary-btn" data-action="study-toggle-right" title="Toggle moves panel">☷ Moves</button>' +
+      '<button class="secondary-btn" data-action="study-toggle-left" title="Toggle course panel">Chapters</button>' +
+      '<button class="secondary-btn" data-action="study-toggle-right" title="Toggle moves panel">Moves</button>' +
       '<button class="secondary-btn' + (S.edit ? ' active' : '') + '" data-action="study-edit" id="btn-edit">✎ ' + (S.edit ? 'Editing' : 'Edit') + '</button>' +
       '<button class="primary-btn" data-action="study-practice">Practice</button></div></div>' +
       '<div class="study-layout' + (S.left ? '' : ' no-left') + (S.right ? '' : ' no-right') + '">' +
