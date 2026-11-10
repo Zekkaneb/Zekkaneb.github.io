@@ -4,6 +4,7 @@
   const KEY = 'opening-lab-settings';
   const DEFAULTS = {
     theme: 'dark',            // dark | light | system
+    palette: 'forest',        // forest | ocean | plum | graphite
     boardTheme: 'green',      // green | brown | blue | slate
     pieceStyle: 'classic',    // classic | minimal | detailed
     coords: true,
@@ -41,6 +42,7 @@
     b.classList.toggle('light', isLight());
     b.classList.toggle('reduce-motion', !cur.animations);
     b.dataset.board = cur.boardTheme;
+    b.dataset.palette = cur.palette;
     b.dataset.pieces = cur.pieceStyle;
     b.dataset.coords = cur.coords ? 'on' : 'off';
     const meta = document.querySelector('meta[name=theme-color]');
@@ -54,6 +56,8 @@
     set(patch) { Object.assign(cur, patch); persist(); apply(); OL.utils.bus.emit('settings', cur); },
     reset() { cur = Object.assign({}, DEFAULTS); persist(); apply(); OL.utils.bus.emit('settings', cur); },
     apply,
+    cycleBoard() { const l = ['green', 'brown', 'blue', 'slate', 'neutral', 'marble', 'midnight']; OL.settings.set({ boardTheme: l[(l.indexOf(cur.boardTheme) + 1) % l.length] }); },
     toggleTheme() { OL.settings.set({ theme: isLight() ? 'dark' : 'light' }); },
   };
+  OL.actions.register({ 'board-theme': () => OL.settings.cycleBoard() });
 })();

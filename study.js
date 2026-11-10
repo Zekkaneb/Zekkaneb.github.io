@@ -56,9 +56,10 @@
     const nags = showNag ? (node.nags || []).map((n) => OL.pgn.nagSymbol(n)).filter(Boolean) : [];
     const cls = ['mv'];
     if (node.id === S.nodeId) cls.push('on');
+    if (node.comment && OL.settings.get('showComments')) cls.push('hc');
     (node.nags || []).forEach((n) => { if ([1, 3].includes(n)) cls.push('good'); if ([2, 4].includes(n)) cls.push('bad'); if ([5, 6].includes(n)) cls.push('dubious'); });
     return pre + '<button class="' + cls.join(' ') + '" data-action="study-goto" data-id="' + esc(node.id) + '">' + esc(node.san) + (nags.length ? '<sup>' + esc(nags.join('')) + '</sup>' : '') + '</button>' +
-      (OL.settings.get('showComments') && node.comment ? '<span class="cm">' + esc(node.comment) + '</span>' : '');
+      '';
   }
   function seq(P, start, ply0, depth) {
     let html = '', c = P, i = start, force = true;
@@ -117,7 +118,7 @@
       lineHtml = tr.length ? tr.map((t) => {
         const c = OL.progress.get(S.course.id, S.ch.id, t.leaf.id);
         const stt = OL.srs.status(c);
-        return '<button class="line-btn" data-action="study-goto" data-id="' + esc(t.leaf.id) + '" title="' + esc(OL.courses.lineLabel(S.ch, t.leaf.id)) + '"><span class="dot ' + stt + '"></span><span>' + esc(OL.courses.lineLabel(S.ch, t.leaf.id, 34)) + '</span></button>';
+        return '<button class="line-btn" data-action="study-goto" data-id="' + esc(t.leaf.id) + '" title="' + esc(OL.courses.lineLabel(S.ch, t.leaf.id)) + '"><span class="dot ' + stt + '"></span><span>' + esc(OL.courses.lineLabel(S.ch, t.leaf.id, 80)) + '</span></button>';
       }).join('') : '<p class="muted small">No trainable lines yet. ' + (S.ch.root.children.length ? '' : 'Add moves in edit mode.') + '</p>';
     } catch (e) { console.error(e); lineHtml = '<p class="muted small">Could not list lines: ' + esc(e.message) + '</p>'; }
     $('#study-left').innerHTML =
@@ -158,7 +159,8 @@
       '<span class="spacer"></span>' +
       '<button class="icon-btn" data-action="study-flip" title="Flip board (F)" aria-label="Flip board">⇅</button>' +
       '<button class="icon-btn' + (OL.settings.get('coords') ? ' active' : '') + '" data-action="study-coords" title="Toggle coordinates" aria-label="Toggle coordinates">a1</button>' +
-      '<button class="icon-btn' + (OL.settings.get('showArrows') ? ' active' : '') + '" data-action="study-arrows" title="Toggle next-move arrows" aria-label="Toggle arrows">➚</button>';
+      '<button class="icon-btn' + (OL.settings.get('showArrows') ? ' active' : '') + '" data-action="study-arrows" title="Toggle next-move arrows" aria-label="Toggle arrows">➚</button>' +
+      '<button class="icon-btn" data-action="board-theme" title="Change board theme" aria-label="Change board theme">◧</button>';
     S.board.setInteractive(true);
     renderEditTools(st);
   }
@@ -191,7 +193,7 @@
     const meta = [h.ECO && h.ECO !== '?' ? h.ECO : '', h.Opening || ''].filter(Boolean).join(' · ');
     const commentBox = S.edit
       ? '<textarea id="comment-box" rows="4" placeholder="' + (n.id === 'root' ? 'Comment on the starting position…' : 'Comment on this move…') + '">' + esc(n.comment || '') + '</textarea>'
-      : (n.comment ? '<div class="comment-box">' + esc(n.comment).replace(/\n/g, '<br>') + '</div>' : '<p class="muted small">No comment on this move.</p>');
+      : (n.comment ? '<div class="comment-box">' + esc(n.comment).replace(/\n/g, '<br>') + '</div>' : '');
     const nagTxt = (n.nags || []).map((x) => OL.pgn.nagSymbol(x)).filter(Boolean).join(' ');
     const tree = S.ch.root.children.length ? '<div class="move-list" id="move-list">' + (S.ch.root.comment && OL.settings.get('showComments') ? '<span class="cm root">' + esc(S.ch.root.comment) + '</span>' : '') + seq(S.ch.root, 0, 0, 0) + '</div>' : '<p class="muted small pad">This chapter has no moves yet.' + (S.edit ? ' Play a move on the board to begin.' : ' Turn on Edit to add some.') + '</p>';
     $('#study-right').innerHTML =

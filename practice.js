@@ -124,7 +124,7 @@
 
   function renderRunShell() {
     $('#view-practice').innerHTML =
-      '<div class="practice-run"><div class="practice-top"><div><p class="eyebrow" id="pr-eyebrow"></p><h2 id="pr-title"></h2></div><div class="btn-row"><button class="secondary-btn" data-action="practice-flip">Flip</button><button class="secondary-btn" data-action="practice-end">End session</button></div></div>' +
+      '<div class="practice-run"><div class="practice-top"><div><p class="eyebrow" id="pr-eyebrow"></p><h2 id="pr-title"></h2></div><div class="btn-row"><button class="secondary-btn" data-action="practice-flip">Flip</button><button class="secondary-btn" data-action="board-theme" title="Change board theme">◧</button><button class="secondary-btn" data-action="practice-end">End session</button></div></div>' +
       '<div class="progress-track big"><div class="progress-fill" id="pr-bar"></div></div>' +
       '<div class="practice-layout"><div class="board-host"><div id="pr-board"></div></div>' +
       '<aside class="panel practice-side"><div id="pr-turn" class="pill"></div><div id="pr-feedback" class="feedback">Your move.</div><div id="pr-comment" class="comment-box hidden"></div>' +
