@@ -56,7 +56,20 @@
           (p ? '<span class="pc ' + p.c + ' ' + p.t + '">' + glyph(p, style) + '</span>' : '') + '</div>';
       }
       this.root.innerHTML = html;
+      this.root.insertAdjacentHTML('beforeend', this.arrowsSvg(white));
       this.paint();
+    }
+    arrowsSvg(white) {
+      const A = this.s.arrows || [];
+      if (!A.length) return '';
+      const pt = (sq) => { const f = FILES.indexOf(sq[0]), r = +sq[1]; return [(white ? f : 7 - f) + 0.5, (white ? 8 - r : r - 1) + 0.5]; };
+      return '<svg class="arrows" viewBox="0 0 8 8" aria-hidden="true">' + A.map((a) => {
+        const p1 = pt(a.from), p2 = pt(a.to), dx = p2[0] - p1[0], dy = p2[1] - p1[1], L = Math.hypot(dx, dy) || 1, ux = dx / L, uy = dy / L, px = -uy, py = ux;
+        const sx = p1[0] + ux * 0.22, sy = p1[1] + uy * 0.22, bx = p2[0] - ux * 0.36, by = p2[1] - uy * 0.36;
+        const col = a.kind === 'alt' ? '#4a8fd0' : a.kind === 'hint' ? '#e0a93b' : '#3f9a57';
+        const pts = [[p2[0] - ux * 0.06, p2[1] - uy * 0.06], [bx + px * 0.27, by + py * 0.27], [bx - px * 0.27, by - py * 0.27]].map((q) => q.map((v) => v.toFixed(3)).join(',')).join(' ');
+        return '<g opacity="' + (a.kind === 'alt' ? 0.6 : 0.82) + '"><line x1="' + sx.toFixed(3) + '" y1="' + sy.toFixed(3) + '" x2="' + bx.toFixed(3) + '" y2="' + by.toFixed(3) + '" stroke="' + col + '" stroke-width="0.15" stroke-linecap="round"/><polygon points="' + pts + '" fill="' + col + '"/></g>';
+      }).join('') + '</svg>';
     }
     paint() {
       this.root.querySelectorAll('.sq').forEach((el) => {

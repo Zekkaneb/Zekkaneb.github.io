@@ -130,6 +130,10 @@
     if (si && document.activeElement && document.activeElement.id === 'chapter-search') { si.focus(); si.setSelectionRange(si.value.length, si.value.length); }
   }
 
+  function studyArrows() {
+    if (!OL.settings.get('showArrows')) return [];
+    return cur().node.children.filter((c) => c.uci).map((c, i) => ({ from: c.uci.slice(0, 2), to: c.uci.slice(2, 4), kind: i ? 'alt' : 'main' }));
+  }
   function renderBoard() {
     const host = $('#study-board');
     if (!S.board || S.board.root !== host) {
@@ -142,7 +146,7 @@
     const n = cur().node, fen = curFen();
     let check = null, st = null;
     try { st = E().status(fen); if (st.check) check = E().kingSquare(fen, st.turn); } catch (e) { console.error(e); }
-    S.board.set({ fen, last: n.uci ? [n.uci.slice(0, 2), n.uci.slice(2, 4)] : null, check, orientation: S.board.orientation });
+    S.board.set({ fen, last: n.uci ? [n.uci.slice(0, 2), n.uci.slice(2, 4)] : null, check, arrows: studyArrows(), orientation: S.board.orientation });
     $('#chapter-title').textContent = ' · ' + S.ch.name;
     const idx = OL.courses.index(S.ch), e = idx.get(S.nodeId);
     const hasPrev = e.node.id !== 'root', hasNext = e.node.children.length > 0;
@@ -153,7 +157,8 @@
       '<button class="icon-btn" data-action="study-last" ' + (hasNext ? '' : 'disabled') + ' title="Last (End)" aria-label="Last move">⏭</button>' +
       '<span class="spacer"></span>' +
       '<button class="icon-btn" data-action="study-flip" title="Flip board (F)" aria-label="Flip board">⇅</button>' +
-      '<button class="icon-btn' + (OL.settings.get('coords') ? ' active' : '') + '" data-action="study-coords" title="Toggle coordinates" aria-label="Toggle coordinates">a1</button>';
+      '<button class="icon-btn' + (OL.settings.get('coords') ? ' active' : '') + '" data-action="study-coords" title="Toggle coordinates" aria-label="Toggle coordinates">a1</button>' +
+      '<button class="icon-btn' + (OL.settings.get('showArrows') ? ' active' : '') + '" data-action="study-arrows" title="Toggle next-move arrows" aria-label="Toggle arrows">➚</button>';
     S.board.setInteractive(true);
     renderEditTools(st);
   }
@@ -276,6 +281,7 @@
     'study-goto': (el) => goto(el.dataset.id),
     'study-first': () => go.first(), 'study-prev': () => go.prev(), 'study-next': () => go.next(), 'study-last': () => go.last(),
     'study-flip': () => { const o = S.board.orientation === 'white' ? 'black' : 'white'; S.flipped = o !== S.ch.orientation; S.board.set({ orientation: o }); },
+    'study-arrows': () => { OL.settings.set({ showArrows: !OL.settings.get('showArrows') }); renderBoard(); },
     'study-coords': () => { OL.settings.set({ coords: !OL.settings.get('coords') }); renderBoard(); },
     'study-toggle-left': () => { S.left = !S.left; $('.study-layout').classList.toggle('no-left', !S.left); },
     'study-toggle-right': () => { S.right = !S.right; $('.study-layout').classList.toggle('no-right', !S.right); },

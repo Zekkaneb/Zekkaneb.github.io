@@ -13,6 +13,9 @@
     maxSession: 20,
     autoAdvance: true,        // practice: auto-play opponent replies and move on to the next line
     opponentDelay: 450,
+    showArrows: true,         // arrows for next moves in study
+    pauseOnComments: true,    // practice: wait for Continue when a move has an explanation
+    waitBetweenLines: true,   // practice: wait for Next line instead of auto-advancing
     showComments: true,
     showAnnotations: true,
     defaultPracticeMode: 'smart', // smart | due | new | all | difficult | incorrect

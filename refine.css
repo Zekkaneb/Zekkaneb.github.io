@@ -10,3 +10,10 @@
 .sq.selected .pc{transform:scale(1.06)}
 .sq.target:after{background:#1e3a2466}
 body[data-board=neutral] .board{--sq-light:#ebebe8;--sq-dark:#a3a6a2}
+
+/* bigger board */
+.board-host{max-width:min(100%,calc(100vh - 140px),920px)}
+.view.wide,#view-practice{max-width:2000px}
+@media(min-width:1181px){.study-layout{grid-template-columns:230px minmax(0,1fr) 320px}.practice-layout{grid-template-columns:minmax(0,1fr) 300px}}
+.arrows{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}
+#pr-comment{font-size:14px;line-height:1.65;padding:14px}

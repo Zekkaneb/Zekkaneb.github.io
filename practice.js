@@ -142,7 +142,7 @@
       user: ch.orientation === 'black' ? 'b' : 'w', learn: !item.card || !item.card.reviews, waiting: false, done: false, replay: !!replay, t0: Date.now(), switched: false,
     };
     tick();
-    P.board.set({ fen: P.L.fen, last: null, check: null, marks: {}, orientation: P.flip ? (ch.orientation === 'white' ? 'black' : 'white') : ch.orientation });
+    P.board.set({ fen: P.L.fen, last: null, check: null, marks: {}, arrows: [], orientation: P.flip ? (ch.orientation === 'white' ? 'black' : 'white') : ch.orientation });
     paintRun();
     setFeedback(P.L.learn ? 'New line - watch the answers highlighted, then play them.' : 'Play the next move of your repertoire.', 'info');
     advance();
@@ -162,7 +162,8 @@
     const L = P.L; if (!L) return;
     const el = $('#pr-actions'); if (!el) return;
     if (L.done) { el.innerHTML = '<button class="primary-btn" data-action="practice-next">' + (P.qi + 1 >= P.queue.length ? 'Finish session' : 'Next line →') + '</button><button class="secondary-btn" data-action="practice-replay">Replay line</button>'; return; }
-    if (L.waiting) el.innerHTML = '<button class="secondary-btn" data-action="practice-hint">Hint</button><button class="secondary-btn" data-action="practice-reveal">Show answer</button>';
+    if (L.reading) el.innerHTML = '<button class="primary-btn" data-action="practice-read">Continue →</button>';
+    else if (L.waiting) el.innerHTML = '<button class="secondary-btn" data-action="practice-hint">Hint</button><button class="secondary-btn" data-action="practice-reveal">Show answer</button>';
     else if (L.needContinue) el.innerHTML = '<button class="primary-btn" data-action="practice-continue">Continue →</button>';
     else el.innerHTML = '';
   }
@@ -172,6 +173,14 @@
     if (node && node.comment && OL.settings.get('showComments')) { c.textContent = node.comment; c.classList.remove('hidden'); } else c.classList.add('hidden');
   }
 
+  function arrowFor(n, kind) { return n && n.uci ? [{ from: n.uci.slice(0, 2), to: n.uci.slice(2, 4), kind: kind || 'main' }] : []; }
+  function hold(node, ms) {
+    const L = P.L; if (!L) return;
+    if (node && node.comment && OL.settings.get('pauseOnComments') && OL.settings.get('showComments')) {
+      L.reading = true; setActions();
+      const f = $('#pr-feedback'); if (f && !L.done) f.textContent += ' Read the note, then continue.';
+    } else later(advance, ms);
+  }
   function advance() {
     const L = P.L; if (!L || L.done) return;
     if (L.step >= L.path.length) { finishLine(); return; }
@@ -179,7 +188,7 @@
     const mover = OL.courses.sideAtPly(L.item.ch, L.step + 1);
     if (mover === L.user) {
       L.waiting = true; L.hintLevel = 0;
-      P.board.set({ marks: L.learn ? markFor(node) : {} });
+      P.board.set({ marks: L.learn ? markFor(node) : {}, arrows: L.learn ? arrowFor(node) : [] });
       P.board.setInteractive(true);
       paintRun();
       return;
@@ -194,13 +203,13 @@
     L.needContinue = false;
     applyNode(node);
     showComment(node);
-    L.step++; advance();
+    L.step++; hold(node, 0);
   }
   function applyNode(node) {
     const L = P.L;
     L.fen = node.fen;
     let chk = null; try { const st = E().status(L.fen); if (st.check) chk = E().kingSquare(L.fen, st.turn); } catch (e) { console.error(e); }
-    P.board.set({ fen: L.fen, last: node.uci ? [node.uci.slice(0, 2), node.uci.slice(2, 4)] : null, check: chk, marks: {} });
+    P.board.set({ fen: L.fen, last: node.uci ? [node.uci.slice(0, 2), node.uci.slice(2, 4)] : null, check: chk, marks: {}, arrows: [] });
     paintRun();
   }
 
@@ -227,10 +236,10 @@
       setFeedback(alt ? '✓ ' + node.san + ' - also in your repertoire (different line). Continuing there.' : '✓ Correct: ' + node.san, 'good');
       showComment(node);
       L.step++;
-      later(advance, 220);
+      hold(node, 220);
     } else {
       L.mistakes++; L.incorrect++; P.S.incorrect++;
-      P.board.set({ fen: L.fen, marks: markFor(expected) });
+      P.board.set({ fen: L.fen, marks: markFor(expected), arrows: arrowFor(expected) });
       const nm = OL.courses.pathTo(L.item.ch, expected.id).length;
       setFeedback('✗ ' + r.san + ' is not in your repertoire here. Expected: ' + expected.san + '. Try again.', 'bad');
       showComment(expected);
@@ -266,7 +275,7 @@
     setFeedback(msg, L.mistakes || L.revealed ? 'info' : 'good');
     paintRun();
     OL.utils.bus.emit('progress', {});
-    if (OL.settings.get('autoAdvance') && !L.mistakes && !L.revealed && !L.replay) later(() => nextLine(), 1100);
+    if (OL.settings.get('autoAdvance') && !L.mistakes && !L.revealed && !L.replay && !OL.settings.get('waitBetweenLines')) later(() => nextLine(), 1100);
   }
   function nextLine() {
     if (!P.L || !P.L.done || P.phase !== 'run') return;
@@ -311,9 +320,10 @@
   OL.actions.register({
     'practice-expand': (el) => { P.prefill = { course: el.dataset.id }; renderSetup(); },
     'practice-start': () => { const cfg = readCfg(); if (!cfg.courseIds.length) { OL.ui.toast('Select at least one course.', 'warn'); return; } startSession(cfg); },
-    'practice-hint': () => { const L = P.L; if (!L || !L.waiting) return; L.hint = true; L.hintLevel = (L.hintLevel || 0) + 1; const n = L.path[L.step]; if (L.hintLevel === 1) { P.board.set({ marks: { [n.uci.slice(0, 2)]: 'hint' } }); setFeedback('Hint: move the highlighted piece.', 'info'); } else if (L.hintLevel === 2) { P.board.set({ marks: markFor(n) }); setFeedback('Hint: it goes to the highlighted square.', 'info'); } else OL.actions.run('practice-reveal'); },
+    'practice-hint': () => { const L = P.L; if (!L || !L.waiting) return; L.hint = true; L.hintLevel = (L.hintLevel || 0) + 1; const n = L.path[L.step]; if (L.hintLevel === 1) { P.board.set({ marks: { [n.uci.slice(0, 2)]: 'hint' } }); setFeedback('Hint: move the highlighted piece.', 'info'); } else if (L.hintLevel === 2) { P.board.set({ marks: markFor(n), arrows: arrowFor(n, 'hint') }); setFeedback('Hint: it goes to the highlighted square.', 'info'); } else OL.actions.run('practice-reveal'); },
+    'practice-read': () => { const L = P.L; if (!L || !L.reading) return; L.reading = false; advance(); },
     'practice-flip': () => { if (!P.board || !P.L) return; P.flip = !P.flip; const o = P.L.item.ch.orientation; P.board.set({ orientation: P.flip ? (o === 'white' ? 'black' : 'white') : o }); },
-    'practice-reveal': () => { const L = P.L; if (!L || !L.waiting) return; L.revealed = true; const n = L.path[L.step]; L.attempts++; P.S.attempted++; L.waiting = false; P.board.setInteractive(false); applyNode(n); setFeedback('Answer: ' + n.san + ' (this line will come back sooner).', 'bad'); showComment(n); L.step++; later(advance, 500); },
+    'practice-reveal': () => { const L = P.L; if (!L || !L.waiting) return; L.revealed = true; const n = L.path[L.step]; L.attempts++; P.S.attempted++; L.waiting = false; P.board.setInteractive(false); applyNode(n); setFeedback('Answer: ' + n.san + ' (this line will come back sooner).', 'bad'); showComment(n); L.step++; hold(n, 500); },
     'practice-continue': () => { const L = P.L; if (!L) return; playOpponent(L.path[L.step]); },
     'practice-next': () => nextLine(),
     'practice-replay': () => { clearTimers(); startLine(true); },
@@ -324,6 +334,7 @@
   document.addEventListener('keydown', (e) => {
     if (P.phase !== 'run' || !P.L || e.target.closest('input,textarea,select')) return;
     if ((e.key === 'Enter' || e.key === ' ') && P.L.done) { e.preventDefault(); nextLine(); }
+    else if ((e.key === 'Enter' || e.key === ' ') && P.L.reading) { e.preventDefault(); OL.actions.run('practice-read'); }
     else if (e.key === 'Enter' && P.L.needContinue) { e.preventDefault(); OL.actions.run('practice-continue'); }
   });
 

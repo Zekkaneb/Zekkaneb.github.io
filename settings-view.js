@@ -26,6 +26,9 @@
       row('New variations per session', '', '<input type="number" data-setting="defaultNew" min="0" max="200" value="' + s.defaultNew + '">') +
       row('Maximum variations per session', '', '<input type="number" data-setting="maxSession" min="1" max="500" value="' + s.maxSession + '">') +
       row('Automatic advancement', 'Auto-play the opponent\'s replies and continue to the next line after a perfect one.', chk('autoAdvance', s.autoAdvance, 'Enabled')) +
+      row('Next-move arrows', 'Study page: draw arrows for the continuations.', chk('showArrows', s.showArrows, 'Enabled')) +
+      row('Pause for explanations', 'Practice waits for Continue when a move has a comment.', chk('pauseOnComments', s.pauseOnComments, 'Enabled')) +
+      row('Wait between lines', 'Practice waits for you after each line instead of jumping to the next.', chk('waitBetweenLines', s.waitBetweenLines, 'Enabled')) +
       row('Show comments', '', chk('showComments', s.showComments, 'In move list and during practice')) +
       row('Show annotations', '!, ?, !!, ?? etc. next to moves.', chk('showAnnotations', s.showAnnotations, 'Enabled')) + '</div>' +
       '<div class="panel"><h3>Data</h3><p class="muted small">Everything is stored in <b>this browser only</b> (IndexedDB). It does not sync between devices - use a backup file to move it. ' + (OL.store.persistent ? '' : '<b class="warn">Persistent storage is unavailable right now; changes will be lost when you close the tab.</b>') + '</p>' +
