@@ -1,0 +1,19 @@
+/* Light theme: overrides the dark tokens defined in styles.css */
+body.light{--bg:#f3f5f1;--sidebar:#fff;--panel:#fff;--panel-2:#f0f3ee;--line:#dfe6dd;--text:#202b23;--muted:#6b786f;--soft:#4a584e;--accent:#4a7a4c;--accent-dark:#e3eedf;--accent-ink:#fff;--gold:#a9792b;--danger:#c4554a;--danger-bg:#fbe7e4;--ok-bg:#e3eedf;--shadow:0 12px 35px #2633261a}
+body.light .brand-mark{background:var(--accent);color:#fff}
+body.light .dropzone{background:#f7faf5;border-color:#b9c8b7}
+body.light .dropzone:hover,body.light .dropzone.dragover{background:#eef5ea}
+body.light .message{color:#2e4a30}body.light .message.error,body.light .banner,body.light .feedback.bad,body.light .pill.red{color:#8a2c22}
+body.light .feedback.good,body.light .pill.green{color:#2f5a31}
+body.light .toast{background:#27402b;color:#fff}body.light .toast.error{background:#8a2c22;color:#fff}body.light .toast.warn{background:#6e5217;color:#fff}
+body.light .modal-backdrop{background:#2b362c77}
+body.light .qa.primary{color:#fff}body.light .qa.primary span,body.light .qa.primary small{color:#fff}
+body.light .stack-bar .seg.new{background:#c4cdc5}body.light .progress-track{background:#e1e8df}
+body.light .board{border-color:#d3dbd0}
+body.light .course-art .tag{background:#fffc;color:#344536;border-color:#fff}
+body.light .mv.on{color:#fff}
+body.light .nag-btn.on{color:#fff}
+body.light .due-pill,body.light .nav-count.due{color:#fff}
+/* subtle default dark-mode contrast for pills inside modals */
+body:not(.light) .pill.reviewing{color:#8fc0e8}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}

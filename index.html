@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#111714">
+  <title>Opening Lab — Chess opening study</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/themes.css">
+  <link rel="stylesheet" href="css/board.css">
+</head>
+<body>
+  <div id="boot" class="boot"><div class="spinner"></div><p>Opening your library…</p></div>
+
+  <div id="app" class="app-shell hidden">
+    <aside class="sidebar" aria-label="Main navigation">
+      <a class="brand" href="#/dashboard"><span class="brand-mark">♞</span><span>opening<span class="brand-light">lab</span></span></a>
+      <div class="side-label">WORKSPACE</div>
+      <nav class="main-nav">
+        <button class="nav-item" data-route="dashboard" data-nav="#/dashboard"><span>⌂</span><em>Dashboard</em></button>
+        <button class="nav-item" data-route="courses" data-nav="#/courses"><span>▦</span><em>My courses</em><b id="course-count" class="nav-count">0</b></button>
+        <button class="nav-item" data-route="explore" data-nav="#/explore"><span>⌕</span><em>Opening library</em></button>
+        <button class="nav-item" data-route="practice" data-nav="#/practice"><span>◷</span><em>Practice</em><b id="due-count" class="nav-count due hidden">0</b></button>
+        <button class="nav-item" data-route="stats" data-nav="#/stats"><span>↗</span><em>Progress</em></button>
+        <button class="nav-item" data-route="settings" data-nav="#/settings"><span>⚙</span><em>Settings</em></button>
+      </nav>
+      <div class="sidebar-bottom">
+        <button class="nav-item" data-nav="#/import"><span>＋</span><em>Import a study</em></button>
+        <div class="local-note"><span class="status-dot"></span><div><strong>Stored on this device</strong><small>Does not sync between devices. Use Settings → backup.</small></div></div>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <div class="breadcrumb"><span>Workspace</span><span class="crumb-slash">/</span><strong id="breadcrumb-current">Dashboard</strong></div>
+        <div class="top-actions">
+          <button class="search-trigger" data-action="open-search" aria-label="Search (press /)">⌕ <span>Search</span><kbd>/</kbd></button>
+          <button class="icon-btn" data-action="show-shortcuts" aria-label="Keyboard shortcuts" title="Keyboard shortcuts">?</button>
+          <button class="icon-btn" data-action="toggle-theme" aria-label="Toggle dark / light mode" title="Toggle theme (T)">◐</button>
+        </div>
+      </header>
+      <div id="banner" class="banner hidden" role="alert"></div>
+      <section id="view-dashboard" class="view"></section>
+      <section id="view-courses" class="view"></section>
+      <section id="view-import" class="view"></section>
+      <section id="view-explore" class="view"></section>
+      <section id="view-practice" class="view"></section>
+      <section id="view-stats" class="view"></section>
+      <section id="view-settings" class="view"></section>
+      <section id="view-study" class="view wide"></section>
+    </main>
+  </div>
+  <div id="modal-root"></div>
+  <div id="toast-root" aria-live="polite"></div>
+  <script src="js/boot.js"></script>
+  <noscript><p style="padding:2rem">Opening Lab needs JavaScript.</p></noscript>
+</body>
+</html>
