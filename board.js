@@ -39,6 +39,34 @@
     get orientation() { return this.o.orientation; }
 
     render() {
+      let old = null;
+      if (this.root.children.length && this._orient === this.o.orientation) {
+        old = new Map();
+        this.root.querySelectorAll('.sq').forEach((el) => { const pc = el.querySelector('.pc'); if (pc) { const r = el.getBoundingClientRect(); old.set(el.dataset.sq, { key: pc.className, x: r.left, y: r.top }); } });
+      }
+      this._orient = this.o.orientation;
+      this.draw();
+      this.slide(old);
+    }
+    slide(old) {
+      if (!old || document.body.classList.contains('reduce-motion') || Date.now() - (this._dragEnd || 0) < 400) return;
+      const now = new Map(), gone = [];
+      this.root.querySelectorAll('.sq').forEach((el) => { const pc = el.querySelector('.pc'); if (pc) now.set(el.dataset.sq, { key: pc.className, pc, el }); });
+      old.forEach((o, sq) => { const n = now.get(sq); if (!n || n.key !== o.key) gone.push(o); });
+      now.forEach((n, sq) => {
+        const o = old.get(sq); if (o && o.key === n.key) return;
+        const r = n.el.getBoundingClientRect();
+        let bi = -1, bd = Infinity;
+        gone.forEach((g, i) => { if (g.key === n.key) { const d = Math.hypot(g.x - r.left, g.y - r.top); if (d < bd) { bd = d; bi = i; } } });
+        if (bi < 0 || !bd) return;
+        const g = gone.splice(bi, 1)[0];
+        n.pc.style.transition = 'none'; n.pc.style.transform = 'translate(' + (g.x - r.left) + 'px,' + (g.y - r.top) + 'px)'; n.pc.style.zIndex = 5;
+        void n.pc.offsetWidth;
+        n.pc.style.transition = 'transform .17s ease-out'; n.pc.style.transform = '';
+        setTimeout(() => { n.pc.style.zIndex = ''; n.pc.style.transition = ''; }, 220);
+      });
+    }
+    draw() {
       const grid = OL.engine.pieceGrid(this.s.fen);
       const white = this.o.orientation === 'white';
       const style = document.body.dataset.pieces || 'filled';
@@ -127,6 +155,7 @@
       if (d.ghost) d.ghost.remove();
       if (d.pc) d.pc.style.opacity = '';
       if (!d.moved) { if (d.was) this.clear(); return; }
+      this._dragEnd = Date.now();
       const under = document.elementFromPoint(e.clientX, e.clientY);
       const tsq = under && under.closest && under.closest('.sq') && this.root.contains(under) ? under.closest('.sq').dataset.sq : null;
       if (tsq && tsq !== d.from) this.attempt(d.from, tsq);

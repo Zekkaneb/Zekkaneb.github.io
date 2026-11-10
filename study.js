@@ -168,7 +168,7 @@
   function renderEditTools() {
     const el = $('#edit-tools');
     const e = cur();
-    if (!S.edit) { el.innerHTML = '<p class="hint">Click a move, use ← → keys, or play a move on the board that is in the study. Switch on <b>Edit</b> to add moves and variations.</p>'; return; }
+    if (!S.edit) { el.innerHTML = '<p class="kbd-hint"><kbd>←</kbd> <kbd>→</kbd> step · <kbd>↑</kbd> <kbd>↓</kbd> sidelines · <kbd>F</kbd> flip · <kbd>?</kbd> all shortcuts</p>'; return; }
     const n = e.node, isRoot = n.id === 'root';
     const sibIdx = e.parent ? e.parent.children.indexOf(n) : 0;
     el.innerHTML =

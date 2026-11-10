@@ -251,7 +251,7 @@
       '<div class="progress-row"><span>Chapters studied</span><span>' + s.completed + '/' + s.chapters + ' · ' + pctDone + '%</span></div><div class="progress-track"><div class="progress-fill" style="width:' + pctDone + '%"></div></div>' +
       '<div class="progress-row"><span>Memorised</span><span>' + memo + '%</span></div><div class="progress-track"><div class="progress-fill gold" style="width:' + memo + '%"></div></div>' +
       '<div class="course-foot"><span class="faint">Last studied: ' + relTime(c.lastStudied) + '</span>' +
-      '<span class="card-btns"><button class="text-btn" data-action="course-practice" data-id="' + esc(c.id) + '">Practice</button><button class="icon-btn" title="Course options" aria-label="Course options" data-action="course-menu" data-id="' + esc(c.id) + '">⋯</button></span></div></div></article>';
+      '<span class="card-btns"><button class="primary-btn sm" data-action="course-open" data-id="' + esc(c.id) + '">Continue</button><button class="text-btn" data-action="course-practice" data-id="' + esc(c.id) + '">Practice</button><button class="icon-btn" title="Course options" aria-label="Course options" data-action="course-menu" data-id="' + esc(c.id) + '">⋯</button></span></div></div></article>';
   }
   function renderLibrary() {
     const root = $('#view-courses');
