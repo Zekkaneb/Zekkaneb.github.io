@@ -21,7 +21,7 @@
     const chessError = await loadChess();
     if (chessError) console.error('chess.js unavailable:', chessError);
     try {
-      for (const m of MODULES) await load('js/' + m + '.js');
+      for (const m of MODULES) await load(m + '.js');
     } catch (e) {
       console.error(e);
       document.getElementById('boot').innerHTML = '<div class="error-state"><h2>Application files failed to load</h2><p>' + e.message + '</p><p>Serve the folder over http (for example <code>python -m http.server</code>) rather than opening index.html directly.</p></div>';
