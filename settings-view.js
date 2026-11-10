@@ -23,7 +23,7 @@
       '<div class="board-preview"><div id="set-board"></div></div></div>' +
       '<div class="panel"><h3>Study &amp; practice</h3>' +
       row('Default training side', '', sel('defaultSide', [['both', 'Both sides'], ['white', 'White'], ['black', 'Black']], s.defaultSide)) +
-      row('Default practice mode', '', sel('defaultPracticeMode', [['smart', 'Smart (due + new)'], ['due', 'Due'], ['new', 'New'], ['all', 'All'], ['difficult', 'Difficult'], ['incorrect', 'Previously incorrect']], s.defaultPracticeMode)) +
+      row('Default practice mode', '', sel('defaultPracticeMode', [['smart', 'Smart (due + new)'], ['due', 'Due'], ['new', 'New'], ['all', 'All'], ['difficult', 'Difficult'], ['incorrect', 'Previously incorrect'], ['test', 'Test']], s.defaultPracticeMode)) +
       row('New variations per session', '', '<input type="number" data-setting="defaultNew" min="0" max="200" value="' + s.defaultNew + '">') +
       row('Maximum variations per session', '', '<input type="number" data-setting="maxSession" min="1" max="500" value="' + s.maxSession + '">') +
       row('Automatic advancement', 'Auto-play the opponent\'s replies and continue to the next line after a perfect one.', chk('autoAdvance', s.autoAdvance, 'Enabled')) +

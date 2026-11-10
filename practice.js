@@ -10,7 +10,7 @@
   const OL = (window.OL = window.OL || {});
   const { $, esc, shuffle, plural, fmtDuration, fmtPct, uid } = OL.utils;
   const E = () => OL.engine;
-  const MODES = [['smart', 'Smart (due + new)'], ['due', 'Due for review'], ['new', 'New variations'], ['all', 'All variations'], ['difficult', 'Difficult variations'], ['incorrect', 'Previously incorrect']];
+  const MODES = [['smart', 'Smart (due + new)'], ['due', 'Due for review'], ['new', 'New variations'], ['all', 'All variations'], ['difficult', 'Difficult variations'], ['incorrect', 'Previously incorrect'], ['test', 'Test (no hints or answers shown)']];
 
   const P = { phase: 'setup', cfg: null, queue: [], qi: 0, L: null, board: null, S: null, timers: [], prefill: {}, posMaps: new Map() };
   const later = (fn, ms) => { const t = setTimeout(fn, ms); P.timers.push(t); return t; };
@@ -41,7 +41,7 @@
       case 'new': q = fresh.slice(0, cfg.newCount); break;
       case 'difficult': q = shuffle(items.filter((i) => OL.srs.isDifficult(i.card))); break;
       case 'incorrect': q = shuffle(items.filter((i) => i.card && i.card.incorrect > 0)); break;
-      case 'all': q = shuffle(items); break;
+      case 'all': case 'test': q = shuffle(items); break;
       default: q = due.concat(fresh.slice(0, cfg.newCount));
     }
     return { items, queue: q.slice(0, cfg.maxSession), counts: { total: items.length, due: due.length, fresh: fresh.length } };
@@ -116,7 +116,7 @@
     clearTimers();
     P.cfg = cfg; P.queue = r.queue; P.qi = 0;
     P.S = { id: uid('sess'), started: Date.now(), active: 0, last: Date.now(), attempted: 0, correct: 0, incorrect: 0, lines: [], courseIds: Array.from(new Set(r.queue.map((i) => i.course.id))) };
-    P.phase = 'run'; P.flip = false;
+    P.phase = 'run'; P.flip = false; P.test = cfg.mode === 'test';
     renderRunShell();
     startLine();
   }
@@ -139,7 +139,7 @@
     const path = OL.courses.pathTo(ch, item.leaf.id);
     P.L = {
       item, path, step: 0, fen: OL.courses.startFenOf(ch), mistakes: 0, hint: false, revealed: false, attempts: 0, correct: 0, incorrect: 0,
-      user: ch.orientation === 'black' ? 'b' : 'w', learn: !item.card || !item.card.reviews, waiting: false, done: false, replay: !!replay, t0: Date.now(), switched: false,
+      user: ch.orientation === 'black' ? 'b' : 'w', learn: !P.test && (!item.card || !item.card.reviews), waiting: false, done: false, replay: !!replay, t0: Date.now(), switched: false,
     };
     tick();
     P.board.set({ fen: P.L.fen, last: null, check: null, marks: {}, arrows: [], orientation: P.flip ? (ch.orientation === 'white' ? 'black' : 'white') : ch.orientation });
@@ -150,7 +150,7 @@
 
   function paintRun() {
     const L = P.L, it = L.item, n = P.queue.length;
-    $('#pr-eyebrow').textContent = 'LINE ' + (P.qi + 1) + ' OF ' + n + (L.replay ? ' · REPLAY (not graded)' : '');
+    $('#pr-eyebrow').textContent = 'LINE ' + (P.qi + 1) + ' OF ' + n + (P.test ? ' · TEST' : '') + (L.replay ? ' · REPLAY (not graded)' : '');
     $('#pr-title').textContent = it.course.title + ' · ' + it.ch.name;
     $('#pr-bar').style.width = Math.round((P.qi / n) * 100) + '%';
     $('#pr-turn').textContent = (E().turnOf(L.fen) === 'w' ? 'White' : 'Black') + ' to move · you are ' + (L.user === 'w' ? 'White' : 'Black');
@@ -163,20 +163,20 @@
     const el = $('#pr-actions'); if (!el) return;
     if (L.done) { el.innerHTML = '<button class="primary-btn" data-action="practice-next">' + (P.qi + 1 >= P.queue.length ? 'Finish session' : 'Next line →') + '</button><button class="secondary-btn" data-action="practice-replay">Replay line</button>'; return; }
     if (L.reading) el.innerHTML = '<button class="primary-btn" data-action="practice-read">Continue →</button>';
-    else if (L.waiting) el.innerHTML = '<button class="secondary-btn" data-action="practice-hint">Hint</button><button class="secondary-btn" data-action="practice-reveal">Show answer</button>';
+    else if (L.waiting) el.innerHTML = P.test ? '<button class="secondary-btn" data-action="practice-reveal">Give up this move</button>' : '<button class="secondary-btn" data-action="practice-hint">Hint</button><button class="secondary-btn" data-action="practice-reveal">Show answer</button>';
     else if (L.needContinue) el.innerHTML = '<button class="primary-btn" data-action="practice-continue">Continue →</button>';
     else el.innerHTML = '';
   }
   function setFeedback(text, kind) { const f = $('#pr-feedback'); if (f) { f.textContent = text; f.className = 'feedback ' + (kind || ''); } }
   function showComment(node) {
     const c = $('#pr-comment'); if (!c) return;
-    if (node && node.comment && OL.settings.get('showComments')) { c.textContent = node.comment; c.classList.remove('hidden'); } else c.classList.add('hidden');
+    if (node && node.comment && OL.settings.get('showComments') && !(P.test && !(P.L && P.L.done))) { c.textContent = node.comment; c.classList.remove('hidden'); } else c.classList.add('hidden');
   }
 
   function arrowFor(n, kind) { return n && n.uci ? [{ from: n.uci.slice(0, 2), to: n.uci.slice(2, 4), kind: kind || 'main' }] : []; }
   function hold(node, ms) {
     const L = P.L; if (!L) return;
-    if (node && node.comment && OL.settings.get('pauseOnComments') && OL.settings.get('showComments')) {
+    if (node && node.comment && !P.test && OL.settings.get('pauseOnComments') && OL.settings.get('showComments')) {
       L.reading = true; setActions();
       const f = $('#pr-feedback'); if (f && !L.done) f.textContent += ' Read the note, then continue.';
     } else later(advance, ms);
@@ -239,10 +239,10 @@
       hold(node, 220);
     } else {
       L.mistakes++; L.incorrect++; P.S.incorrect++;
-      P.board.set({ fen: L.fen, marks: markFor(expected), arrows: arrowFor(expected) });
+      P.board.set(P.test ? { fen: L.fen, marks: {}, arrows: [] } : { fen: L.fen, marks: markFor(expected), arrows: arrowFor(expected) });
       const nm = OL.courses.pathTo(L.item.ch, expected.id).length;
-      setFeedback('✗ ' + r.san + ' is not in your repertoire here. Expected: ' + expected.san + '. Try again.', 'bad');
-      showComment(expected);
+      setFeedback(P.test ? '✗ ' + r.san + ' is not the repertoire move. Try again.' : '✗ ' + r.san + ' is not in your repertoire here. Expected: ' + expected.san + '. Try again.', 'bad');
+      if (!P.test) showComment(expected);
       paintRun();
     }
   }
@@ -320,7 +320,7 @@
   OL.actions.register({
     'practice-expand': (el) => { P.prefill = { course: el.dataset.id }; renderSetup(); },
     'practice-start': () => { const cfg = readCfg(); if (!cfg.courseIds.length) { OL.ui.toast('Select at least one course.', 'warn'); return; } startSession(cfg); },
-    'practice-hint': () => { const L = P.L; if (!L || !L.waiting) return; L.hint = true; L.hintLevel = (L.hintLevel || 0) + 1; const n = L.path[L.step]; if (L.hintLevel === 1) { P.board.set({ marks: { [n.uci.slice(0, 2)]: 'hint' } }); setFeedback('Hint: move the highlighted piece.', 'info'); } else if (L.hintLevel === 2) { P.board.set({ marks: markFor(n), arrows: arrowFor(n, 'hint') }); setFeedback('Hint: it goes to the highlighted square.', 'info'); } else OL.actions.run('practice-reveal'); },
+    'practice-hint': () => { const L = P.L; if (!L || !L.waiting || P.test) return; L.hint = true; L.hintLevel = (L.hintLevel || 0) + 1; const n = L.path[L.step]; if (L.hintLevel === 1) { P.board.set({ marks: { [n.uci.slice(0, 2)]: 'hint' } }); setFeedback('Hint: move the highlighted piece.', 'info'); } else if (L.hintLevel === 2) { P.board.set({ marks: markFor(n), arrows: arrowFor(n, 'hint') }); setFeedback('Hint: it goes to the highlighted square.', 'info'); } else OL.actions.run('practice-reveal'); },
     'practice-read': () => { const L = P.L; if (!L || !L.reading) return; L.reading = false; advance(); },
     'practice-flip': () => { if (!P.board || !P.L) return; P.flip = !P.flip; const o = P.L.item.ch.orientation; P.board.set({ orientation: P.flip ? (o === 'white' ? 'black' : 'white') : o }); },
     'practice-reveal': () => { const L = P.L; if (!L || !L.waiting) return; L.revealed = true; const n = L.path[L.step]; L.attempts++; P.S.attempted++; L.waiting = false; P.board.setInteractive(false); applyNode(n); setFeedback('Answer: ' + n.san + ' (this line will come back sooner).', 'bad'); showComment(n); L.step++; hold(n, 500); },
