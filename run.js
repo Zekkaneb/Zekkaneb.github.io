@@ -1,10 +1,10 @@
 /* Node tests for the pure-logic modules (no browser, no chess.js needed).
-   Run: node tests/run.js
+   Run (from the project root):  node run.js
    buildChapter() is exercised against a FAKE engine, so these tests cover tree structure/leniency logic,
    not chess legality (that is chess.js's job in the browser). */
 global.window = global;
 const path = require('path');
-const load = (f) => require(path.join(__dirname, '..', 'js', f));
+const load = (f) => require(path.join(__dirname, f));
 load('utils.js');
 load('pgn-parser.js');
 load('spaced-repetition.js');

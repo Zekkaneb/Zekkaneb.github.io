@@ -1,6 +1,10 @@
+/* Node tests for sideline handling: every variation is its own trainable line, transposition matching, SRS keys.
+   Run (from the project root):  node sidelines.js
+   Uses a FAKE engine, so this does not test chess legality. */
 global.window = global; global.document = { addEventListener() {}, querySelector() {}, querySelectorAll() { return []; } };
 global.localStorage = { getItem() { return null; } };
-const p = (f) => require('/home/claude/t/js/' + f);
+const path = require('path');
+const p = (f) => require(path.join(__dirname, f));
 p('utils.js'); p('pgn-parser.js'); p('spaced-repetition.js');
 const OL = global.OL, assert = require('assert');
 /* Fake engine: position = sorted set of moves played, so transpositions give equal positions. NOT chess legality. */

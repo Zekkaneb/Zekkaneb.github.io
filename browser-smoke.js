@@ -1,6 +1,6 @@
-/* Browser smoke test (Playwright). Uses tests/fake-chess.js in place of chess.js (no network in CI sandbox).
+/* Browser smoke test (Playwright). Uses fake-chess.js in place of chess.js (no network in CI sandbox).
    Verifies UI wiring, persistence, migration, SRS write-through. Does NOT verify chess legality.
-   Run:  python3 -m http.server 8123 &   node tests/browser-smoke.js */
+   Run (from the project root):  python3 -m http.server 8123 &   node browser-smoke.js */
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
 const URL = process.env.URL || 'http://localhost:8123/index.html';
@@ -38,7 +38,7 @@ const PGN = `[Event "Test: Italian"]
 
   /* ---- 0. seed a v1 prototype database BEFORE the app first runs ---- */
   await page.goto('about:blank');
-  await page.goto(URL.replace('index.html', 'tests/blank.html')).catch(() => {});
+  await page.goto(URL.replace('index.html', 'blank.html')).catch(() => {});
   await page.evaluate(() => new Promise((res, rej) => {
     const r = indexedDB.open('opening-lab-db', 1);
     r.onupgradeneeded = () => r.result.createObjectStore('courses', { keyPath: 'id' });
