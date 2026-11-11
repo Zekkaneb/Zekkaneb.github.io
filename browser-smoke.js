@@ -3,7 +3,7 @@
    Run (from the project root):  python3 -m http.server 8123 &   node browser-smoke.js */
 const { chromium } = require('playwright');
 const fs = require('fs'), path = require('path');
-const URL = process.env.URL || 'http://localhost:8123/index.html';
+const APP_URL = process.env.URL || 'http://localhost:8123/index.html';
 const fake = fs.readFileSync(path.join(__dirname, 'fake-chess.js'), 'utf8');
 const SHOTS = process.env.SHOTS || '/tmp';
 let pass = 0, fail = 0;
@@ -38,7 +38,9 @@ const PGN = `[Event "Test: Italian"]
 
   /* ---- 0. seed a v1 prototype database BEFORE the app first runs ---- */
   await page.goto('about:blank');
-  await page.goto(URL.replace('index.html', 'blank.html')).catch(() => {});
+  const BLANK_URL = new URL('blank.html', APP_URL).href;
+  const blankResponse = await page.goto(BLANK_URL);
+  if (!blankResponse || !blankResponse.ok()) throw new Error('Could not load ' + BLANK_URL + ' (HTTP ' + (blankResponse ? blankResponse.status() : 'no response') + '). Is blank.html in the served project root?');
   await page.evaluate(() => new Promise((res, rej) => {
     const r = indexedDB.open('opening-lab-db', 1);
     r.onupgradeneeded = () => r.result.createObjectStore('courses', { keyPath: 'id' });
@@ -53,13 +55,13 @@ const PGN = `[Event "Test: Italian"]
   }));
 
   console.log('Boot & migration');
-  await page.goto(URL);
+  await page.goto(APP_URL);
   await page.waitForSelector('#app:not(.hidden)', { timeout: 8000 });
   ok(true, 'app boots and shows the shell');
   await page.waitForSelector('.modal', { timeout: 3000 }).catch(() => {});
   const modalText = await page.locator('.modal').first().textContent().catch(() => '');
   if (modalText) await page.click('[data-modal-close]');
-  await page.goto(URL + '#/courses');
+  await page.goto(APP_URL + '#/courses');
   await page.waitForSelector('#view-courses .course-card');
   ok((await page.locator('#view-courses .course-card h3').allTextContents()).includes('Legacy Italian'), 'legacy v1 course survived and appears in library');
   const legacy = (await dbAll('courses')).find((c) => c.id === 'course-legacy-1');
@@ -69,7 +71,7 @@ const PGN = `[Event "Test: Italian"]
   ok(ch0.root.children[0].nags[0] === 1 && ch0.completed === true && ch0.description === 'old notes', 'legacy NAG, completed flag and notes preserved');
 
   console.log('Import');
-  await page.goto(URL + '#/import');
+  await page.goto(APP_URL + '#/import');
   await page.click('[data-tab="paste"]');
   await page.fill('#pgn-text', PGN);
   await page.click('[data-action="import-parse-paste"]');
@@ -129,7 +131,7 @@ const PGN = `[Event "Test: Italian"]
 
   console.log('Practice');
   const ch2 = test.chapters[1];
-  await page.goto(URL + '#/practice?course=' + test.id + '&chapter=' + ch2.id);
+  await page.goto(APP_URL + '#/practice?course=' + test.id + '&chapter=' + ch2.id);
   await page.waitForSelector('.practice-setup');
   await page.selectOption('#pc-mode', 'all');
   await page.waitForFunction(() => document.querySelector('#pc-preview').textContent.includes('1 variation'));
@@ -159,24 +161,24 @@ const PGN = `[Event "Test: Italian"]
   ok(sessions.length === 1 && sessions[0].attempted === 3 && sessions[0].correct === 2, 'session record persisted (3 attempted, 2 correct)');
 
   console.log('Dashboard / Stats / Explore');
-  await page.goto(URL + '#/dashboard');
+  await page.goto(APP_URL + '#/dashboard');
   await page.waitForSelector('#view-dashboard .stats-grid');
   ok((await page.locator('#view-dashboard .activity').textContent()).includes('Practice session'), 'dashboard activity reflects the practice session');
-  await page.goto(URL + '#/stats');
+  await page.goto(APP_URL + '#/stats');
   await page.waitForSelector('.course-stats');
   ok((await page.locator('#view-stats').textContent()).includes('Test'), 'statistics lists courses from saved data');
   await page.click('[data-action="stats-toggle"]');
   await page.locator('[data-action="stats-variations"]').first().click();
   ok((await page.locator('.modal').textContent()).includes('Attempts'), 'per-variation table opens');
   await page.keyboard.press('Escape');
-  await page.goto(URL + '#/explore');
+  await page.goto(APP_URL + '#/explore');
   await page.waitForSelector('#view-explore .catalog-item');
   ok((await page.locator('#view-explore .catalog-item h3').allTextContents()).includes('Italian Game'), 'opening library groups by PGN opening name');
   await page.selectOption('#explore-mode', 'moves'); await page.fill('#explore-search', '1. e4 e5 2. Nf3');
   ok((await page.locator('#view-explore .result').count()) >= 1, 'move-sequence search finds the chapter');
 
   console.log('Course management & backup');
-  await page.goto(URL + '#/courses');
+  await page.goto(APP_URL + '#/courses');
   await page.waitForSelector('#view-courses .course-card');
   const n0 = await page.locator('#view-courses .course-card').count();
   await page.locator('[data-action="course-menu"]').first().click();
@@ -188,7 +190,7 @@ const PGN = `[Event "Test: Italian"]
   await page.fill('#f_title', 'Renamed course'); await page.click('.modal button[type=submit]');
   await page.waitForFunction(() => [...document.querySelectorAll('#view-courses .course-card h3')].some((h) => h.textContent === 'Renamed course'));
   ok(true, 'rename course');
-  const [dl] = await Promise.all([page.waitForEvent('download'), (async () => { await page.goto(URL + '#/settings'); await page.click('[data-action="set-export"]'); })()]);
+  const [dl] = await Promise.all([page.waitForEvent('download'), (async () => { await page.goto(APP_URL + '#/settings'); await page.click('[data-action="set-export"]'); })()]);
   const bpath = SHOTS + '/backup.json'; await dl.saveAs(bpath);
   const backup = JSON.parse(fs.readFileSync(bpath, 'utf8'));
   ok(backup.format === 'opening-lab-backup' && backup.courses.length === n0 + 1 && backup.progress.length === 1, 'backup contains courses + progress');
@@ -198,7 +200,7 @@ const PGN = `[Event "Test: Italian"]
   await page.click('.modal button[type=submit]');
   await page.waitForTimeout(500);
   ok((await dbAll('courses')).length === n0 + 1, 'course count unchanged after re-import');
-  await page.goto(URL + '#/courses');
+  await page.goto(APP_URL + '#/courses');
   await page.locator('[data-action="course-menu"]').first().click();
   await page.click('[data-modal-close="del"]');
   await page.click('.modal .danger-btn');
@@ -206,7 +208,7 @@ const PGN = `[Event "Test: Italian"]
   ok(true, 'delete course (with confirmation)');
 
   console.log('Persistence & theme');
-  await page.goto(URL + '#/settings'); await page.selectOption('[data-setting="theme"]', 'light');
+  await page.goto(APP_URL + '#/settings'); await page.selectOption('[data-setting="theme"]', 'light');
   await page.reload(); await page.waitForSelector('#app:not(.hidden)');
   ok(await page.evaluate(() => document.body.classList.contains('light')), 'theme persists after reload');
   ok((await dbAll('progress')).length >= 0 && (await dbAll('courses')).length === n0, 'library intact after reload');
@@ -214,14 +216,14 @@ const PGN = `[Event "Test: Italian"]
 
   console.log('Responsive');
   await page.setViewportSize({ width: 390, height: 800 });
-  await page.goto(URL + '#/courses'); await page.waitForSelector('#view-courses .course-card');
+  await page.goto(APP_URL + '#/courses'); await page.waitForSelector('#view-courses .course-card');
   ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'mobile: no horizontal overflow (courses)');
   await page.screenshot({ path: SHOTS + '/shot-mobile-courses.png' });
-  await page.goto(URL + '#/study/' + test.id); await page.waitForSelector('#study-board .sq');
+  await page.goto(APP_URL + '#/study/' + test.id); await page.waitForSelector('#study-board .sq');
   ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'mobile: no horizontal overflow (study)');
   await page.screenshot({ path: SHOTS + '/shot-mobile-study.png' });
   await page.setViewportSize({ width: 820, height: 1000 });
-  await page.goto(URL + '#/dashboard'); await page.waitForSelector('#view-dashboard .stats-grid');
+  await page.goto(APP_URL + '#/dashboard'); await page.waitForSelector('#view-dashboard .stats-grid');
   ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'tablet: no horizontal overflow (dashboard)');
 
   ok(errors.length === 0, 'no uncaught errors / console errors during the run' + (errors.length ? ': ' + errors.slice(0, 5).join(' | ') : ''));
