@@ -49,17 +49,16 @@
     const abs = (E().fullmove(fen) - 1) * 2 + (E().turnOf(fen) === 'b' ? 1 : 0) + ply0;
     return { white: abs % 2 === 0, n: Math.floor(abs / 2) + 1 };
   }
-  function token(node, ply0, force) {
+  function token(node, ply0, force, noCm) {
     const nm = numberFor(ply0);
     const pre = nm.white ? '<span class="mn">' + nm.n + '.</span>' : force ? '<span class="mn">' + nm.n + '…</span>' : '';
     const showNag = OL.settings.get('showAnnotations');
     const nags = showNag ? (node.nags || []).map((n) => OL.pgn.nagSymbol(n)).filter(Boolean) : [];
     const cls = ['mv'];
     if (node.id === S.nodeId) cls.push('on');
-    if (node.comment && OL.settings.get('showComments')) cls.push('hc');
     (node.nags || []).forEach((n) => { if ([1, 3].includes(n)) cls.push('good'); if ([2, 4].includes(n)) cls.push('bad'); if ([5, 6].includes(n)) cls.push('dubious'); });
     return pre + '<button class="' + cls.join(' ') + '" data-action="study-goto" data-id="' + esc(node.id) + '">' + esc(node.san) + (nags.length ? '<sup>' + esc(nags.join('')) + '</sup>' : '') + '</button>' +
-      '';
+      (OL.settings.get('showComments') && node.comment && !noCm ? '<span class="cm">' + esc(node.comment) + '</span>' : '');
   }
   function seq(P, start, ply0, depth) {
     let html = '', c = P, i = start, force = true;
@@ -76,6 +75,55 @@
     return html;
   }
 
+  /* ---------- lessons: one block per sideline ----------
+   The tree is cut into segments. Segment 0 is the main line. Every alternative (children[1..]) starts a new
+   segment that holds ONLY that sideline's own moves; deeper branches become their own segments in turn. */
+  function segmentsOf(ch) {
+    const out = [];
+    if (!ch.root.children.length) return out;
+    const walk = (parent, idx, ply0, depth) => {
+      const seg = { parent, first: parent.children[idx], nodes: [], ply0, depth };
+      out.push(seg);
+      const pend = [];
+      let c = parent, i = idx, p = ply0;
+      while (c.children[i]) {
+        const node = c.children[i];
+        seg.nodes.push({ node, ply0: p });
+        if (i === 0) for (let k = 1; k < c.children.length; k++) pend.push([c, k, p]);
+        c = node; i = 0; p++;
+      }
+      pend.forEach((b) => walk(b[0], b[1], b[2], depth + 1));
+    };
+    walk(ch.root, 0, 0, 0);
+    return out;
+  }
+  const moveLabel = (ply0, san) => { const nm = numberFor(ply0); return nm.n + (nm.white ? '. ' : '… ') + san; };
+  function lessonsHtml() {
+    const segs = segmentsOf(S.ch);
+    if (!segs.length) return '<p class="muted small pad">This chapter has no moves yet.' + (S.edit ? ' Play a move on the board to begin.' : ' Turn on Edit to add some.') + '</p>';
+    const showCm = OL.settings.get('showComments');
+    const note = (t) => '<div class="lesson-note">' + esc(t).replace(/\n/g, '<br>') + '</div>';
+    let sideN = 0;
+    return (S.ch.root.comment && showCm ? note(S.ch.root.comment) : '') + segs.map((seg, si) => {
+      const main = si === 0;
+      if (!main) sideN++;
+      const leaf = seg.nodes[seg.nodes.length - 1].node;
+      const status = OL.srs.status(OL.progress.get(S.course.id, S.ch.id, leaf.id));
+      const on = seg.nodes.some((x) => x.node.id === S.nodeId);
+      const count = plural(seg.nodes.length, 'move');
+      const sub = main ? 'From the starting position · ' + count : 'Branches off after ' + (seg.parent.id === 'root' ? 'the starting position' : moveLabel(seg.ply0 - 1, seg.parent.san)) + ' · ' + count;
+      let body = '', run = '', force = true;
+      seg.nodes.forEach((x) => {
+        run += token(x.node, x.ply0, force, true); force = false;
+        if (showCm && x.node.comment) { body += '<div class="lesson-moves">' + run + '</div>' + note(x.node.comment); run = ''; force = true; }
+      });
+      if (run) body += '<div class="lesson-moves">' + run + '</div>';
+      return '<section class="lesson' + (on ? ' on' : '') + '" style="margin-left:' + Math.min(seg.depth, 3) * 10 + 'px">' +
+        '<button class="lesson-head" data-action="study-goto" data-id="' + esc(seg.first.id) + '"><div><b>' + (main ? 'Main line' : 'Sideline ' + sideN + ': ' + esc(moveLabel(seg.ply0, seg.first.san))) + '</b><small>' + esc(sub) + '</small></div><span class="spacer"></span><span class="pill ' + status + '">' + status + '</span></button>' +
+        '<div class="lesson-body">' + body + '</div></section>';
+    }).join('');
+  }
+
   /* ---------- rendering ---------- */
   function renderAll() {
     if (!S.course) return;
@@ -89,8 +137,7 @@
       '<div class="study-title"><strong>' + esc(S.course.title) + '</strong><span class="muted" id="chapter-title"></span></div>' +
       '<span id="save-state" class="save-state saved">✓ Saved</span>' +
       '<div class="btn-row">' +
-      '<button class="secondary-btn" data-action="study-toggle-left" title="Toggle course panel">Chapters</button>' +
-      '<button class="secondary-btn" data-action="study-toggle-right" title="Toggle moves panel">Moves</button>' +
+      '<button class="secondary-btn" data-action="study-toggle-left" title="Toggle course panel">☰ Course</button>' +
       '<button class="secondary-btn' + (S.edit ? ' active' : '') + '" data-action="study-edit" id="btn-edit">✎ ' + (S.edit ? 'Editing' : 'Edit') + '</button>' +
       '<button class="primary-btn" data-action="study-practice">Practice</button></div></div>' +
       '<div class="study-layout' + (S.left ? '' : ' no-left') + (S.right ? '' : ' no-right') + '">' +
@@ -118,7 +165,7 @@
       lineHtml = tr.length ? tr.map((t) => {
         const c = OL.progress.get(S.course.id, S.ch.id, t.leaf.id);
         const stt = OL.srs.status(c);
-        return '<button class="line-btn" data-action="study-goto" data-id="' + esc(t.leaf.id) + '" title="' + esc(OL.courses.lineLabel(S.ch, t.leaf.id)) + '"><span class="dot ' + stt + '"></span><span>' + esc(OL.courses.lineLabel(S.ch, t.leaf.id, 80)) + '</span></button>';
+        return '<button class="line-btn" data-action="study-goto" data-id="' + esc(t.leaf.id) + '" title="' + esc(OL.courses.lineLabel(S.ch, t.leaf.id)) + '"><span class="dot ' + stt + '"></span><span>' + esc(OL.courses.lineLabel(S.ch, t.leaf.id, 34)) + '</span></button>';
       }).join('') : '<p class="muted small">No trainable lines yet. ' + (S.ch.root.children.length ? '' : 'Add moves in edit mode.') + '</p>';
     } catch (e) { console.error(e); lineHtml = '<p class="muted small">Could not list lines: ' + esc(e.message) + '</p>'; }
     $('#study-left').innerHTML =
@@ -131,10 +178,6 @@
     if (si && document.activeElement && document.activeElement.id === 'chapter-search') { si.focus(); si.setSelectionRange(si.value.length, si.value.length); }
   }
 
-  function studyArrows() {
-    if (!OL.settings.get('showArrows')) return [];
-    return cur().node.children.filter((c) => c.uci).map((c, i) => ({ from: c.uci.slice(0, 2), to: c.uci.slice(2, 4), kind: i ? 'alt' : 'main' }));
-  }
   function renderBoard() {
     const host = $('#study-board');
     if (!S.board || S.board.root !== host) {
@@ -147,7 +190,7 @@
     const n = cur().node, fen = curFen();
     let check = null, st = null;
     try { st = E().status(fen); if (st.check) check = E().kingSquare(fen, st.turn); } catch (e) { console.error(e); }
-    S.board.set({ fen, last: n.uci ? [n.uci.slice(0, 2), n.uci.slice(2, 4)] : null, check, arrows: studyArrows(), orientation: S.board.orientation });
+    S.board.set({ fen, last: n.uci ? [n.uci.slice(0, 2), n.uci.slice(2, 4)] : null, check, orientation: S.board.orientation });
     $('#chapter-title').textContent = ' · ' + S.ch.name;
     const idx = OL.courses.index(S.ch), e = idx.get(S.nodeId);
     const hasPrev = e.node.id !== 'root', hasNext = e.node.children.length > 0;
@@ -158,9 +201,7 @@
       '<button class="icon-btn" data-action="study-last" ' + (hasNext ? '' : 'disabled') + ' title="Last (End)" aria-label="Last move">⏭</button>' +
       '<span class="spacer"></span>' +
       '<button class="icon-btn" data-action="study-flip" title="Flip board (F)" aria-label="Flip board">⇅</button>' +
-      '<button class="icon-btn' + (OL.settings.get('coords') ? ' active' : '') + '" data-action="study-coords" title="Toggle coordinates" aria-label="Toggle coordinates">a1</button>' +
-      '<button class="icon-btn' + (OL.settings.get('showArrows') ? ' active' : '') + '" data-action="study-arrows" title="Toggle next-move arrows" aria-label="Toggle arrows">➚</button>' +
-      '<button class="icon-btn" data-action="board-theme" title="Change board theme" aria-label="Change board theme">◧</button>';
+      '<button class="icon-btn' + (OL.settings.get('coords') ? ' active' : '') + '" data-action="study-coords" title="Toggle coordinates" aria-label="Toggle coordinates">a1</button>';
     S.board.setInteractive(true);
     renderEditTools(st);
   }
@@ -168,7 +209,7 @@
   function renderEditTools() {
     const el = $('#edit-tools');
     const e = cur();
-    if (!S.edit) { el.innerHTML = '<p class="kbd-hint"><kbd>←</kbd> <kbd>→</kbd> step · <kbd>↑</kbd> <kbd>↓</kbd> sidelines · <kbd>F</kbd> flip · <kbd>?</kbd> all shortcuts</p>'; return; }
+    if (!S.edit) { el.innerHTML = '<p class="hint">Click a move, use ← → keys, or play a move on the board that is in the study. Switch on <b>Edit</b> to add moves and variations.</p>'; return; }
     const n = e.node, isRoot = n.id === 'root';
     const sibIdx = e.parent ? e.parent.children.indexOf(n) : 0;
     el.innerHTML =
@@ -188,31 +229,36 @@
     try { st = E().status(fen); } catch (err) { console.error(err); }
     const nm = n.id === 'root' ? null : numberFor(e.ply - 1);
     const heading = n.id === 'root' ? 'Starting position' : nm.n + (nm.white ? '. ' : '… ') + n.san;
+    const hasPrev = n.id !== 'root', hasNext = n.children.length > 0;
     const nextMoves = n.children.length > 1 ? '<div class="branches"><p class="eyebrow">CONTINUATIONS</p>' + n.children.map((c, i) => '<button class="chip" data-action="study-goto" data-id="' + esc(c.id) + '">' + esc(c.san) + (i === 0 ? ' <small>main</small>' : '') + '</button>').join('') + '</div>' : '';
     const h = S.ch.headers || {};
     const meta = [h.ECO && h.ECO !== '?' ? h.ECO : '', h.Opening || ''].filter(Boolean).join(' · ');
     const commentBox = S.edit
-      ? '<textarea id="comment-box" rows="4" placeholder="' + (n.id === 'root' ? 'Comment on the starting position…' : 'Comment on this move…') + '">' + esc(n.comment || '') + '</textarea>'
-      : (n.comment ? '<div class="comment-box">' + esc(n.comment).replace(/\n/g, '<br>') + '</div>' : '');
+      ? '<textarea id="comment-box" rows="3" placeholder="' + (n.id === 'root' ? 'Comment on the starting position…' : 'Comment on this move…') + '">' + esc(n.comment || '') + '</textarea>'
+      : (n.comment ? '<div class="comment-box">' + esc(n.comment).replace(/\n/g, '<br>') + '</div>' : '<p class="muted small">No comment on this move.</p>');
     const nagTxt = (n.nags || []).map((x) => OL.pgn.nagSymbol(x)).filter(Boolean).join(' ');
-    const tree = S.ch.root.children.length ? '<div class="move-list" id="move-list">' + (S.ch.root.comment && OL.settings.get('showComments') ? '<span class="cm root">' + esc(S.ch.root.comment) + '</span>' : '') + seq(S.ch.root, 0, 0, 0) + '</div>' : '<p class="muted small pad">This chapter has no moves yet.' + (S.edit ? ' Play a move on the board to begin.' : ' Turn on Edit to add some.') + '</p>';
+    let lessons, count = 0;
+    try { lessons = lessonsHtml(); count = segmentsOf(S.ch).length; } catch (err) { console.error(err); lessons = '<p class="muted small pad">Could not list the notation: ' + esc(err.message) + '</p>'; }
+    const prev = $('#study-right .side-scroll');
+    const top = prev ? prev.scrollTop : 0;
     $('#study-right').innerHTML =
-      '<div class="panel-head"><p class="eyebrow">' + esc(S.ch.name) + '</p><h3>' + esc(heading) + (nagTxt ? ' <span class="nag-big">' + esc(nagTxt) + '</span>' : '') + '</h3>' + (meta ? '<p class="muted small">' + esc(meta) + '</p>' : '') + '</div>' +
+      '<div class="side-fixed"><div class="panel-head"><p class="eyebrow">' + esc(S.ch.name) + '</p><h3>' + esc(heading) + (nagTxt ? ' <span class="nag-big">' + esc(nagTxt) + '</span>' : '') + '</h3>' + (meta ? '<p class="muted small">' + esc(meta) + '</p>' : '') + '</div>' +
       '<div class="info-pills"><span class="pill">' + (st.turn === 'w' ? 'White' : 'Black') + ' to move</span>' + (st.checkmate ? '<span class="pill red">Checkmate</span>' : st.check ? '<span class="pill red">Check</span>' : '') + (st.stalemate ? '<span class="pill">Stalemate</span>' : '') + (S.ch.startFen ? '<span class="pill">Custom start</span>' : '') + '<button class="pill btn" data-action="study-copy-fen" title="Copy FEN">FEN ⧉</button></div>' +
-      '<div class="panel-section">' + commentBox + '</div>' + nextMoves +
-      '<div class="panel-section"><p class="eyebrow">MOVES</p>' + tree + '</div>' +
+      '<div class="side-nav"><button class="secondary-btn" data-action="study-prev" ' + (hasPrev ? '' : 'disabled') + '>◀ Back</button><button class="primary-btn" data-action="study-next" ' + (hasNext ? '' : 'disabled') + '>Next ▶</button></div>' +
+      nextMoves + '<div class="panel-section">' + commentBox + '</div></div>' +
+      '<div class="side-scroll"><p class="eyebrow">LESSONS · ' + plural(count, 'line') + '</p><div class="lessons" id="move-list">' + lessons + '</div>' +
       '<div class="panel-section"><p class="eyebrow">CHAPTER NOTES</p>' + (S.edit ? '<textarea id="chapter-notes" rows="3" placeholder="Describe this chapter…">' + esc(S.ch.description || '') + '</textarea>' : (S.ch.description ? '<div class="comment-box">' + esc(S.ch.description).replace(/\n/g, '<br>') + '</div>' : '<p class="muted small">No chapter notes.</p>')) + '</div>' +
-      '<div class="panel-section"><button class="secondary-btn block" data-action="study-complete">' + (S.ch.completed ? '✓ Marked complete - click to undo' : 'Mark chapter as studied') + '</button></div>';
-    const act = $('.mv.on');
+      '<div class="panel-section"><button class="secondary-btn block" data-action="study-complete">' + (S.ch.completed ? '✓ Marked complete - click to undo' : 'Mark chapter as studied') + '</button></div></div>';
+    const sc = $('#study-right .side-scroll'); if (sc) sc.scrollTop = top;
+    const act = $('#study-right .mv.on');
     if (act && act.scrollIntoView) act.scrollIntoView({ block: 'nearest' });
   }
 
   /* ---------- navigation ---------- */
-  const saveLast = debounce(() => { if (S.course) OL.store.put('courses', S.course).catch(() => {}); }, 800);
   function goto(id) {
     const idx = OL.courses.index(S.ch);
     if (!idx.has(id)) { console.warn('goto: unknown node', id); return; }
-    S.nodeId = id; S.course.lastPos = { ch: S.ch.id, node: id }; saveLast();
+    S.nodeId = id;
     renderBoard(); renderRight();
     OL.utils.$$('#study-left .line-btn').length && 0;
   }
@@ -260,7 +306,7 @@
       title: ch ? 'Edit chapter' : 'New chapter', submitLabel: ch ? 'Save' : 'Add chapter',
       fields: [
         { name: 'name', label: 'Chapter name', value: ch ? ch.name : '', required: true },
-        { name: 'orientation', label: 'You play as (board orientation & training side)', type: 'select', options: [{ value: 'white', label: 'White' }, { value: 'black', label: 'Black' }], value: ch ? ch.orientation : (S.course.side === 'black' ? 'black' : 'white') },
+        { name: 'orientation', label: 'You play as (board orientation & training side)', type: 'select', options: [{ value: 'white', label: 'White' }, { value: 'black', label: 'Black' }], value: ch ? ch.orientation : 'white' },
         { name: 'description', label: 'Chapter description', type: 'textarea', value: ch ? ch.description : '' },
       ],
     });
@@ -284,7 +330,6 @@
     'study-goto': (el) => goto(el.dataset.id),
     'study-first': () => go.first(), 'study-prev': () => go.prev(), 'study-next': () => go.next(), 'study-last': () => go.last(),
     'study-flip': () => { const o = S.board.orientation === 'white' ? 'black' : 'white'; S.flipped = o !== S.ch.orientation; S.board.set({ orientation: o }); },
-    'study-arrows': () => { OL.settings.set({ showArrows: !OL.settings.get('showArrows') }); renderBoard(); },
     'study-coords': () => { OL.settings.set({ coords: !OL.settings.get('coords') }); renderBoard(); },
     'study-toggle-left': () => { S.left = !S.left; $('.study-layout').classList.toggle('no-left', !S.left); },
     'study-toggle-right': () => { S.right = !S.right; $('.study-layout').classList.toggle('no-right', !S.right); },
@@ -325,7 +370,7 @@
       if (!pick) return;
       if (pick === 'edit') {
         const v = await chapterForm(ch); if (!v) return;
-        if (isCur) pushUndo(); if (v.orientation !== ch.orientation && S.course.side && S.course.side !== 'both') ch.sideLocked = true; Object.assign(ch, v); if (isCur) S.board = null; ch.edited = true; markDirty(); renderAll();
+        if (isCur) pushUndo(); Object.assign(ch, v); ch.edited = true; markDirty(); renderAll();
       } else if (pick === 'fen') { if (!S.edit) { S.edit = true; } await setStartFen(); renderShellKeep(); }
       else if (pick === 'up' || pick === 'down') {
         const j = i + (pick === 'up' ? -1 : 1); if (j < 0 || j >= S.course.chapters.length) return;
@@ -357,7 +402,7 @@
       if (!S.commentUndoArmed) { pushUndo(); S.commentUndoArmed = true; clearTimeout(S.commentT); }
       clearTimeout(S.commentT); S.commentT = setTimeout(() => { S.commentUndoArmed = false; }, 1500);
       n.comment = e.target.value; S.ch.edited = true; markDirty();
-      if (OL.settings.get('showComments')) { const ml = $('#move-list'); if (ml) ml.innerHTML = (S.ch.root.comment && OL.settings.get('showComments') ? '<span class="cm root">' + esc(S.ch.root.comment) + '</span>' : '') + seq(S.ch.root, 0, 0, 0); }
+      { const ml = $('#move-list'); if (ml) ml.innerHTML = lessonsHtml(); }
     }
     if (e.target.id === 'chapter-notes') { if (!S.notesArmed) { pushUndo(); S.notesArmed = true; setTimeout(() => (S.notesArmed = false), 1500); } S.ch.description = e.target.value; S.ch.edited = true; markDirty(); }
   });
@@ -388,9 +433,7 @@
     if (!S.layoutInit) { S.layoutInit = true; if (window.innerWidth < 900) S.left = false; } // phones: board first, course panel on demand
     if (!c.chapters.length) { c.chapters.push(OL.courses.newChapter({ name: 'Chapter 1' })); }
     try {
-      const lp = !params.ch && c.lastPos && c.chapters.some((x) => x.id === c.lastPos.ch) ? c.lastPos : null;
-      openChapter(params.ch || (lp ? lp.ch : (c.chapters.find((x) => !x.completed) || c.chapters[0]).id));
-      if (!params.node && lp && OL.courses.index(S.ch).has(lp.node)) S.nodeId = lp.node;
+      openChapter(params.ch || (c.chapters.find((x) => !x.completed) || c.chapters[0]).id);
       if (params.node && OL.courses.index(S.ch).has(params.node)) S.nodeId = params.node;
       renderShell(); renderAll();
       c.lastStudied = Date.now(); OL.store.put('courses', c).catch((e) => console.warn('lastStudied not saved', e));

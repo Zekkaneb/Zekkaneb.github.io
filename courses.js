@@ -65,6 +65,15 @@
     s = s.trim();
     return max && s.length > max ? '…' + s.slice(s.length - max) : s;
   }
+  /* HTML notation for a list of nodes that starts at the chapter's first move (used by practice) */
+  function notation(ch, nodes) {
+    const fen = startFenOf(ch), start = OL.engine.fullmove(fen), white0 = OL.engine.turnOf(fen) === 'w';
+    return nodes.map((n, i) => {
+      const ply = i + (white0 ? 0 : 1);
+      const num = ply % 2 === 0 ? '<span class="mn">' + (start + ply / 2) + '.</span>' : i === 0 ? '<span class="mn">' + (start + (ply - 1) / 2) + '…</span>' : '';
+      return num + '<span class="mv-static">' + esc(n.san) + '</span>';
+    }).join(' ');
+  }
   function mainSans(ch) { return OL.pgn.mainline(ch.root).map((n) => n.san); }
 
   function summary(course, now) {
@@ -141,7 +150,7 @@
   /* ---------- course store ---------- */
   const courses = {
     list: [], loadWarnings: [],
-    COLORS, SCHEMA, index, reindex, trainable, pathTo, lineLabel, mainSans, summary, activity, startFenOf, fenOfNode, sideAtPly,
+    COLORS, SCHEMA, index, reindex, trainable, pathTo, lineLabel, notation, mainSans, summary, activity, startFenOf, fenOfNode, sideAtPly,
     get: (id) => courses.list.find((c) => c.id === id) || null,
     sorted() { return courses.list.slice().sort((a, b) => (a.order || 0) - (b.order || 0)); },
 
@@ -228,7 +237,6 @@
       bus.emit('courses', {});
     },
     categories() { return Array.from(new Set(courses.list.map((c) => c.category).filter(Boolean))).sort(); },
-    applySide(course) { if (course.side === 'white' || course.side === 'black') course.chapters.forEach((ch) => { if (!ch.sideLocked) ch.orientation = course.side; }); },
     exportPgn(course) { OL.utils.download(course.title.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') + '.pgn', OL.pgn.courseToPgn(course), 'application/x-chess-pgn'); },
   };
 
@@ -247,11 +255,11 @@
       '<span class="chess-symbol">♞</span>' + (c.category ? '<span class="tag cat">' + esc(c.category) + '</span>' : '') + '</div>' +
       '<div class="course-info"><h3>' + esc(c.title) + '</h3>' +
       '<p class="clamp">' + (c.description ? esc(c.description) : '<span class="faint">No description</span>') + '</p>' +
-      '<div class="course-meta"><span>' + (c.side && c.side !== 'both' ? c.side[0].toUpperCase() + c.side.slice(1) + ' · ' : '') + plural(s.chapters, 'chapter') + ' · ' + plural(s.variations, 'variation') + '</span><span>' + (s.due ? '<b class="due-pill">' + s.due + ' due</b>' : '') + '</span></div>' +
+      '<div class="course-meta"><span>' + plural(s.chapters, 'chapter') + ' · ' + plural(s.variations, 'variation') + '</span><span>' + (s.due ? '<b class="due-pill">' + s.due + ' due</b>' : '') + '</span></div>' +
       '<div class="progress-row"><span>Chapters studied</span><span>' + s.completed + '/' + s.chapters + ' · ' + pctDone + '%</span></div><div class="progress-track"><div class="progress-fill" style="width:' + pctDone + '%"></div></div>' +
       '<div class="progress-row"><span>Memorised</span><span>' + memo + '%</span></div><div class="progress-track"><div class="progress-fill gold" style="width:' + memo + '%"></div></div>' +
       '<div class="course-foot"><span class="faint">Last studied: ' + relTime(c.lastStudied) + '</span>' +
-      '<span class="card-btns"><button class="primary-btn sm" data-action="course-open" data-id="' + esc(c.id) + '">Continue</button><button class="text-btn" data-action="course-practice" data-id="' + esc(c.id) + '">Practice</button><button class="icon-btn" title="Course options" aria-label="Course options" data-action="course-menu" data-id="' + esc(c.id) + '">⋯</button></span></div></div></article>';
+      '<span class="card-btns"><button class="text-btn" data-action="course-practice" data-id="' + esc(c.id) + '">Practice</button><button class="icon-btn" title="Course options" aria-label="Course options" data-action="course-menu" data-id="' + esc(c.id) + '">⋯</button></span></div></div></article>';
   }
   function renderLibrary() {
     const root = $('#view-courses');
@@ -287,7 +295,6 @@
         { name: 'opening', label: 'Opening (optional)', value: c ? c.opening : '', placeholder: 'e.g. Caro-Kann Defense', help: 'Only shown if you enter it - nothing is guessed.' },
         { name: 'eco', label: 'ECO code (optional)', value: c ? c.eco : '', placeholder: 'e.g. B12' },
         { name: 'category', label: 'Category / folder', value: c ? c.category : '', placeholder: 'e.g. White repertoire' },
-        { name: 'side', label: 'Repertoire side', type: 'select', options: [{ value: 'both', label: 'Both (set per chapter)' }, { value: 'white', label: 'White' }, { value: 'black', label: 'Black' }], value: c ? c.side || 'both' : 'both' },
         { name: 'color', label: 'Cover colour', type: 'swatch', options: COLORS, value: c ? c.color : COLORS[0] },
         { name: 'cover', label: 'Cover image (optional)', type: 'image', value: c ? c.cover : '' },
       ],
@@ -301,7 +308,7 @@
     'course-create': async () => {
       const v = await detailsForm(null);
       if (!v) return;
-      const c = await courses.create(Object.assign({}, v, { chapters: [courses.newChapter({ name: 'Chapter 1', orientation: v.side === 'black' ? 'black' : 'white' })] }));
+      const c = await courses.create(Object.assign({}, v, { chapters: [courses.newChapter({ name: 'Chapter 1' })] }));
       OL.ui.toast('Course created');
       OL.nav.go('#/study/' + c.id + '?edit=1');
     },
@@ -314,7 +321,7 @@
         { id: 'del', label: 'Delete course…', danger: true }] });
       if (pick === 'edit') {
         const v = await detailsForm(c);
-        if (v) { Object.assign(c, v); courses.applySide(c); await courses.save(c); OL.ui.toast('Course updated'); }
+        if (v) { Object.assign(c, v); await courses.save(c); OL.ui.toast('Course updated'); }
       } else if (pick === 'dup') { await courses.duplicate(c.id); OL.ui.toast('Course duplicated'); }
       else if (pick === 'pgn') courses.exportPgn(c);
       else if (pick === 'up' || pick === 'down') { view.sort = 'manual'; await courses.move(c.id, pick === 'up' ? -1 : 1); }
