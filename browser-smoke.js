@@ -2,10 +2,10 @@
    Verifies UI wiring, persistence, migration, SRS write-through. Does NOT verify chess legality.
    Run (from the project root):  python3 -m http.server 8123 &   node browser-smoke.js */
 const { chromium } = require('playwright');
-const fs = require('fs'), path = require('path');
+const fs = require('fs'), path = require('path'), os = require('os');
 const APP_URL = process.env.URL || 'http://localhost:8123/index.html';
 const fake = fs.readFileSync(path.join(__dirname, 'fake-chess.js'), 'utf8');
-const SHOTS = process.env.SHOTS || '/tmp';
+const SHOTS = process.env.SHOTS || os.tmpdir();
 let pass = 0, fail = 0;
 const ok = (c, m) => { if (c) { pass++; console.log('  ok   ' + m); } else { fail++; console.log('  FAIL ' + m); } };
 
